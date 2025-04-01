@@ -111,10 +111,12 @@
                     <option value="">Any</option>
                     </select>
             </div>
+
             <div>
                 <label for="tmdb-rating" class="block text-sm font-medium text-gray-700 mb-1">Min TMDb Rating (0-10)</label>
                 <input type="number" id="tmdb-rating" name="tmdb-rating" min="0" max="10" step="0.1" placeholder="e.g., 7.0" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
             </div>
+
             <div>
                 <label for="decade" class="block text-sm font-medium text-gray-700 mb-1">Decade</label>
                 <select id="decade" name="decade" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
@@ -129,19 +131,27 @@
                     <option value="pre-1960">Pre-1960s</option>
                 </select>
             </div>
+
             <div>
                 <label for="language" class="block text-sm font-medium text-gray-700 mb-1">Original Language</label>
                 <select id="language" name="language" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
                     <option value="">Any</option>
                     </select>
             </div>
+
             <div>
                 <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Country of Origin</label>
                 <select id="country" name="country" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
                     <option value="">Any</option>
                     </select>
             </div>
-             <div></div>
+
+            <div>
+                <label for="watch-country" class="block text-sm font-medium text-gray-700 mb-1">Watch Region (for Providers)</label>
+                <select id="watch-country" name="watch-country" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    </select>
+            </div>
+
             <div class="md:col-span-2 lg:col-span-3 flex justify-center mt-4">
                 <button type="submit" id="find-button" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                     <span class="lucide">&#xea7e;</span> Find Movies
@@ -179,11 +189,15 @@
             "English": "en", "Spanish": "es", "French": "fr", "German": "de", "Japanese": "ja",
             "Korean": "ko", "Hindi": "hi", "Mandarin": "zh", "Italian": "it", "Portuguese": "pt"
         };
+        // Expanded country map for common regions with watch providers
         const countryMap = { // ISO 3166-1 codes
-            "USA": "US", "UK": "GB", "Canada": "CA", "France": "FR", "Germany": "DE",
-            "Japan": "JP", "South Korea": "KR", "India": "IN", "China": "CN", "Spain": "ES",
-            "Australia": "AU", "Italy": "IT", "Brazil": "BR"
+            "Australia": "AU", "Brazil": "BR", "Canada": "CA", "China": "CN", "France": "FR",
+            "Germany": "DE", "India": "IN", "Italy": "IT", "Japan": "JP", "Mexico": "MX",
+            "Netherlands": "NL", "South Korea": "KR", "Spain": "ES", "Sweden": "SE",
+            "UK": "GB", "USA": "US"
         };
+        // Use the same map for watch regions, but can be customized if needed
+        const watchRegionMap = countryMap;
 
         // --- DOM Elements ---
         const form = document.getElementById('recommendation-form');
@@ -193,22 +207,31 @@
         const decadeSelect = document.getElementById('decade');
         const languageSelect = document.getElementById('language');
         const countrySelect = document.getElementById('country');
+        const watchCountrySelect = document.getElementById('watch-country'); // New selector
         const messageBox = document.getElementById('message-box');
         const findButton = document.getElementById('find-button');
         let messageTimeout;
 
         // --- Populate Select Options ---
-        function populateSelect(selectElement, map) {
-            Object.entries(map).forEach(([name, value]) => {
+        function populateSelect(selectElement, map, defaultValue = null) {
+            // Sort map by display name (key) alphabetically
+            const sortedEntries = Object.entries(map).sort((a, b) => a[0].localeCompare(b[0]));
+
+            sortedEntries.forEach(([name, value]) => {
                 const option = document.createElement('option');
-                option.value = value;
+                option.value = value; // Use the mapped value (ID or code)
                 option.textContent = name;
+                if (value === defaultValue) {
+                    option.selected = true; // Set the default selection
+                }
                 selectElement.appendChild(option);
             });
         }
+
         populateSelect(genreSelect, genreMap);
         populateSelect(languageSelect, languageMap);
         populateSelect(countrySelect, countryMap);
+        populateSelect(watchCountrySelect, watchRegionMap, 'US'); // Populate watch regions, default to US
 
         // --- Functions ---
         function showMessage(message, type = 'error', duration = 4000) {
@@ -227,16 +250,13 @@
             return { gte: `${startYear}-01-01`, lte: `${endYear}-12-31` };
         }
 
-        // --- NEW: Function to fetch watch providers for multiple movies ---
+        // --- Function to fetch watch providers for multiple movies ---
         async function fetchWatchProviders(movies) {
-            // Create an array of promises, one for each movie's provider fetch
             const providerPromises = movies.map(movie => {
                 const providerUrl = `${tmdbBaseUrl}/movie/${movie.id}/watch/providers?api_key=${apiKey}`;
                 return fetch(providerUrl)
                     .then(response => {
                         if (!response.ok) {
-                            // Don't throw here, just return null or an error indicator
-                            // so Promise.allSettled continues
                             console.warn(`Failed to fetch providers for movie ${movie.id}: ${response.status}`);
                             return null;
                         }
@@ -244,20 +264,16 @@
                     })
                     .catch(error => {
                         console.error(`Error fetching providers for movie ${movie.id}:`, error);
-                        return null; // Return null on network error
+                        return null;
                     });
             });
 
-            // Wait for all provider fetches to settle (either succeed or fail)
             const results = await Promise.allSettled(providerPromises);
 
-            // Augment the original movie objects with the provider data
             const moviesWithProviders = movies.map((movie, index) => {
                 if (results[index].status === 'fulfilled' && results[index].value) {
-                    // Attach the provider data if the fetch was successful
                     movie.watchProviders = results[index].value.results;
                 } else {
-                    // Ensure the property exists but is empty/null if fetch failed
                     movie.watchProviders = null;
                 }
                 return movie;
@@ -268,7 +284,8 @@
 
 
         // --- UPDATED: Function to display recommendations ---
-        function displayResults(movies) {
+        // Now accepts watchCountryCode as an argument
+        function displayResults(movies, watchCountryCode) {
             resultsDiv.innerHTML = ''; // Clear previous results or loading message
 
             if (!movies || movies.length === 0) {
@@ -313,30 +330,31 @@
                 `;
                 infoDiv.appendChild(details);
 
-                // --- NEW: Where to Watch Section ---
+                // --- UPDATED: Where to Watch Section ---
                 const watchDiv = document.createElement('div');
                 watchDiv.className = 'mt-1'; // Add some top margin
 
                 const watchTitle = document.createElement('p');
                 watchTitle.className = 'text-xs font-medium text-gray-700 mb-0.5';
-                watchTitle.textContent = 'Where to Watch (US Stream):';
+                // Dynamically set title based on selected country
+                watchTitle.textContent = `Where to Watch (${watchCountryCode} Stream):`;
                 watchDiv.appendChild(watchTitle);
 
                 const providerListDiv = document.createElement('div');
                 providerListDiv.className = 'provider-list text-xs text-gray-600';
 
-                // Check if provider data exists and has US flatrate options
-                const usProviders = movie.watchProviders?.US?.flatrate;
-                if (usProviders && usProviders.length > 0) {
-                    usProviders.forEach(provider => {
+                // Use bracket notation to access providers for the selected country
+                // Use optional chaining (?.) to safely access nested properties
+                const selectedCountryProviders = movie.watchProviders?.[watchCountryCode]?.flatrate;
+
+                if (selectedCountryProviders && selectedCountryProviders.length > 0) {
+                    selectedCountryProviders.forEach(provider => {
                         const providerSpan = document.createElement('span');
-                        // In a real app, you might use provider.logo_path with the TMDb image base URL
-                        // For simplicity, we just show the name.
                         providerSpan.textContent = provider.provider_name;
                         providerListDiv.appendChild(providerSpan);
                     });
-                     // Add TMDb link if available
-                    const tmdbLink = movie.watchProviders?.US?.link;
+                     // Add TMDb link if available for the selected country
+                    const tmdbLink = movie.watchProviders?.[watchCountryCode]?.link;
                     if (tmdbLink) {
                         const linkEl = document.createElement('a');
                         linkEl.href = tmdbLink;
@@ -348,10 +366,11 @@
                     }
                 } else if (movie.watchProviders === null) {
                      // Indicate if fetching providers failed for this movie
-                     providerListDiv.innerHTML = '<span class="text-gray-400 text-xs italic">Could not fetch provider info.</span>';
+                     providerListDiv.innerHTML = `<span class="text-gray-400 text-xs italic">Could not fetch provider info.</span>`;
                 }
                  else {
-                    providerListDiv.innerHTML = '<span class="text-gray-400 text-xs italic">No US streaming providers found.</span>';
+                    // Update message if no providers found for the *selected* country
+                    providerListDiv.innerHTML = `<span class="text-gray-400 text-xs italic">No streaming providers found for ${watchCountryCode}.</span>`;
                 }
 
                 watchDiv.appendChild(providerListDiv);
@@ -377,12 +396,7 @@
 
             // --- Stage 1: Discover Movies ---
             findButton.disabled = true;
-            findButton.innerHTML = `
-                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Finding movies...`; // Update loading text
+            findButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Finding movies...`;
             resultsDiv.innerHTML = '<p class="text-center text-gray-500">Finding matching movies...</p>';
 
             const selectedGenreId = genreSelect.value;
@@ -390,6 +404,7 @@
             const selectedDecade = decadeSelect.value;
             const selectedLangCode = languageSelect.value;
             const selectedCountryCode = countrySelect.value;
+            const selectedWatchCountryCode = watchCountrySelect.value; // Get selected watch country
             const { gte: releaseDateGte, lte: releaseDateLte } = getDecadeDates(selectedDecade);
 
             const discoverUrl = new URL(`${tmdbBaseUrl}/discover/movie`);
@@ -418,20 +433,20 @@
                 initialMovies = data.results;
 
                 if (initialMovies.length === 0) {
-                     displayResults([]); // Show "No movies found" message
+                     // Pass the selected watch country even if no movies found, for consistency
+                     displayResults([], selectedWatchCountryCode);
                      findButton.disabled = false;
                      findButton.innerHTML = `<span class="lucide">&#xea7e;</span> Find Movies`;
                      return; // Stop processing if no movies found
                  }
 
                 // --- Stage 2: Fetch Watch Providers ---
-                findButton.innerHTML = `
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">...</svg>
-                    Fetching providers...`; // Update loading text
+                findButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">...</svg> Fetching providers...`;
                 resultsDiv.innerHTML = '<p class="text-center text-gray-500">Fetching watch provider information...</p>';
 
                 const moviesWithProviders = await fetchWatchProviders(initialMovies);
-                displayResults(moviesWithProviders);
+                // Pass the selected watch country to displayResults
+                displayResults(moviesWithProviders, selectedWatchCountryCode);
 
             } catch (error) {
                 console.error("API Fetch Error:", error);
