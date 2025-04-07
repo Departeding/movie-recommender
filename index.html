@@ -85,8 +85,8 @@
            background: #ffffff; /* White */
            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
            cursor: grab;
-           width: 18px;
-           height: 18px;
+           width: 12px;
+           height: 12px;
            right: -9px; /* Center handle */
            top: -6px; /* Center handle */
        }
@@ -109,10 +109,10 @@
 
     <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg w-full max-w-4xl">
         <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6 sm:mb-8 flex items-center justify-center gap-2">
-            <span class="lucide">&#xea5c;</span> Movie Recommender (TMDb + Slider Year Range + Table Output)
+            <span class="lucide">&#xea5c;</span> Movie Recommender
         </h1>
 
-        <form id="recommendation-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-6 mb-6 sm:mb-8"> {/* Increased gap-y */}
+        <form id="recommendation-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-6 mb-6 sm:mb-8">
             <div>
                 <label for="genre" class="block text-sm font-medium text-gray-700 mb-1">Genre</label>
                 <select id="genre" name="genre" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
@@ -125,7 +125,7 @@
                 <input type="number" id="tmdb-rating" name="tmdb-rating" min="0" max="10" step="0.1" placeholder="e.g., 7.0" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
             </div>
 
-            <div class="md:col-span-2">
+            <div class="md:col-span-1">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Release Year Range</label>
                 <div id="year-slider" class="mt-2 mb-1"></div> 
                 <div class="slider-values">
