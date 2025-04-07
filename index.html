@@ -67,7 +67,26 @@
        .results-table .col-rating { width: 110px; }
        .results-table .col-lang { width: 80px; text-align: center; }
        .results-table .col-providers { min-width: 150px; }
-
+        
+        /* Sortable Header Styling */
+       .sortable-header { cursor: pointer; }
+       .sortable-header:hover { background-color: #f3f4f6; } /* Slightly darker bg on hover */
+       .sort-indicator {
+           /* display: inline-block; */
+           /* margin-left: 4px; */
+           /* width: 1em; */ /* Ensure space is reserved */
+           /* color: #9ca3af; */ /* Gray-400 */
+            position: absolute; /* Position arrow absolutely */
+            right: 8px; /* Adjust position as needed */
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8em;
+            color: #9ca3af;
+       }
+       .sortable-header.sort-asc .sort-indicator,
+       .sortable-header.sort-desc .sort-indicator {
+           color: #374151; /* Gray-700 when active */
+       }
        /* noUiSlider Customization (Optional) */
        .noUi-target {
            border: 1px solid #d1d5db; /* Gray-300 */
@@ -164,7 +183,7 @@
         <div class="mt-8">
             <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 text-center">Recommendations</h2>
             <div id="results" class="bg-gray-50 p-1 sm:p-2 rounded-lg border border-gray-200 min-h-[200px] max-h-[400px] overflow-y-auto overflow-x-auto">
-                <p class="text-center text-gray-500 p-4">Enter your preferences and API key, then click "Find Movies". Results will be shown here as a table.</p>
+                <p class="text-center text-gray-500 p-4">Enter your preferences, then click "Find Movies". Results will be shown here as a table.</p>
             </div>
         </div>
     </div>
