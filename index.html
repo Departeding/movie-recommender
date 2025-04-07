@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Recommender</title>
+    <title>Movie Recommender (TMDb + Year Range + Table Output)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,66 +25,38 @@
         font-family: 'Inter', sans-serif;
         background-color: #f3f4f6; /* Light gray background */
       }
-      /* Custom scrollbar for results */
-      #results::-webkit-scrollbar {
-        width: 8px;
+      /* Updated: Added overflow-x-auto for horizontal scrolling on small screens */
+      #results {
+        overflow-y: auto;
+        overflow-x: auto; /* Allow horizontal scroll for table */
       }
-      #results::-webkit-scrollbar-track {
-        background: #e5e7eb; /* Gray-200 */
-        border-radius: 10px;
-      }
-      #results::-webkit-scrollbar-thumb {
-        background-color: #9ca3af; /* Gray-400 */
-        border-radius: 10px;
-        border: 2px solid #e5e7eb; /* Gray-200 */
-      }
-      #results::-webkit-scrollbar-thumb:hover {
-        background-color: #6b7280; /* Gray-500 */
-      }
-      /* Simple fade-in animation for results */
-      .movie-card {
-        animation: fadeIn 0.5s ease-in-out;
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
+      #results::-webkit-scrollbar { width: 8px; height: 8px; } /* Added height for horizontal scrollbar */
+      #results::-webkit-scrollbar-track { background: #e5e7eb; border-radius: 10px; } /* Gray-200 */
+      #results::-webkit-scrollbar-thumb { background-color: #9ca3af; border-radius: 10px; border: 2px solid #e5e7eb; } /* Gray-400 / Gray-200 */
+      #results::-webkit-scrollbar-thumb:hover { background-color: #6b7280; } /* Gray-500 */
+
       /* Message Box Styles */
       #message-box {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 12px 20px;
-        border-radius: 8px;
-        background-color: #ef4444; /* Red-500 */
-        color: white;
-        font-weight: 500;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        z-index: 1000;
-        display: none; /* Hidden by default */
-        opacity: 0;
-        transition: opacity 0.3s ease-in-out;
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+        padding: 12px 20px; border-radius: 8px; color: white; font-weight: 500;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); z-index: 1000;
+        display: none; opacity: 0; transition: opacity 0.3s ease-in-out;
       }
-      #message-box.show {
-        display: block;
-        opacity: 1;
-      }
-      #message-box.info {
-         background-color: #3b82f6; /* Blue-500 */
-      }
-       #message-box.error {
-         background-color: #ef4444; /* Red-500 */
-      }
-      /* Style for movie posters */
-      .movie-poster {
-        width: 60px; /* Adjust size as needed */
-        height: 90px;
+      #message-box.show { display: block; opacity: 1; }
+      #message-box.info { background-color: #3b82f6; } /* Blue-500 */
+      #message-box.error { background-color: #ef4444; } /* Red-500 */
+
+      /* Style for movie posters in table */
+      .movie-poster-table {
+        width: 40px; /* Slightly smaller poster for table */
+        height: 60px;
         object-fit: cover;
         border-radius: 4px;
         background-color: #e5e7eb; /* Placeholder bg */
+        display: block; /* Prevents extra space below image */
+        margin: auto; /* Center if needed, though cell alignment is better */
       }
-      /* Style for provider logos (if used) or text */
+      /* Style for provider list items */
       .provider-list span {
           display: inline-block;
           margin-right: 6px;
@@ -95,13 +67,51 @@
           font-size: 0.7rem; /* Smaller font for providers */
           line-height: 1.2;
       }
+      /* Remove spinner arrows from number inputs */
+      input[type=number]::-webkit-inner-spin-button,
+      input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
+      }
+      /* Basic Table Styling */
+      .results-table {
+          min-width: 100%; /* Ensure table tries to fill container */
+          border-collapse: collapse; /* Nicer borders */
+      }
+      .results-table th, .results-table td {
+          border: 1px solid #e5e7eb; /* Gray-200 border */
+          padding: 8px 12px; /* Adjust padding */
+          text-align: left;
+          vertical-align: top; /* Align content to top */
+          font-size: 0.875rem; /* text-sm */
+      }
+       .results-table th {
+          background-color: #f9fafb; /* Gray-50 background for headers */
+          font-weight: 600; /* semibold */
+          white-space: nowrap; /* Prevent headers from wrapping */
+       }
+       .results-table td {
+           background-color: #ffffff; /* White background for cells */
+       }
+       .results-table tbody tr:nth-child(even) td {
+            background-color: #f9fafb; /* Zebra striping */
+       }
+       /* Column specific styling */
+       .results-table .col-poster { width: 60px; text-align: center; } /* Fixed width for poster column */
+       .results-table .col-year { width: 80px; text-align: center; }
+       .results-table .col-rating { width: 110px; }
+       .results-table .col-lang { width: 80px; text-align: center; }
+       .results-table .col-providers { min-width: 150px; } /* Allow providers column to be wider */
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100">
 
     <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg w-full max-w-4xl">
         <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6 sm:mb-8 flex items-center justify-center gap-2">
-            <span class="lucide">&#xea5c;</span> Movie Recommender
+            <span class="lucide">&#xea5c;</span> Movie Recommender (TMDb + Year Range + Table Output)
         </h1>
 
         <form id="recommendation-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
@@ -117,7 +127,7 @@
                 <input type="number" id="tmdb-rating" name="tmdb-rating" min="0" max="10" step="0.1" placeholder="e.g., 7.0" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
             </div>
 
-           <div>
+            <div>
                 <label for="start-year" class="block text-sm font-medium text-gray-700 mb-1">Start Year</label>
                 <input type="number" id="start-year" name="start-year" min="1874" placeholder="e.g., 1990" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
             </div>
@@ -126,7 +136,6 @@
                 <label for="end-year" class="block text-sm font-medium text-gray-700 mb-1">End Year</label>
                 <input type="number" id="end-year" name="end-year" min="1874" placeholder="e.g., 1999" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
             </div>
-
 
             <div>
                 <label for="language" class="block text-sm font-medium text-gray-700 mb-1">Original Language</label>
@@ -142,7 +151,7 @@
                     </select>
             </div>
 
-            <div>
+            <div class="lg:col-start-3"> {/* Adjust grid position if needed */}
                 <label for="watch-country" class="block text-sm font-medium text-gray-700 mb-1">Watch Region (for Providers)</label>
                 <select id="watch-country" name="watch-country" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
                     </select>
@@ -150,15 +159,15 @@
 
             <div class="md:col-span-2 lg:col-span-3 flex justify-center mt-4">
                 <button type="submit" id="find-button" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span class="lucide">&#xea7e;</span>Find Movies
+                    <span class="lucide">&#xea7e;</span> Find Movies
                 </button>
             </div>
         </form>
 
         <div class="mt-8">
             <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 text-center">Recommendations</h2>
-            <div id="results" class="bg-gray-50 p-4 rounded-lg border border-gray-200 min-h-[200px] max-h-[400px] overflow-y-auto">
-                <p class="text-center text-gray-500">Enter your preferences and API key, then click "Find Movies".</p>
+            <div id="results" class="bg-gray-50 p-1 sm:p-2 rounded-lg border border-gray-200 min-h-[200px] max-h-[400px] overflow-y-auto overflow-x-auto">
+                <p class="text-center text-gray-500 p-4">Enter your preferences and API key, then click "Find Movies". Results will be shown here as a table.</p>
             </div>
         </div>
     </div>
@@ -185,277 +194,342 @@
             "English": "en", "Spanish": "es", "French": "fr", "German": "de", "Japanese": "ja",
             "Korean": "ko", "Hindi": "hi", "Mandarin": "zh", "Italian": "it", "Portuguese": "pt"
         };
-        // Expanded country map for common regions with watch providers
         const countryMap = { // ISO 3166-1 codes
             "Australia": "AU", "Brazil": "BR", "Canada": "CA", "China": "CN", "France": "FR",
             "Germany": "DE", "India": "IN", "Italy": "IT", "Japan": "JP", "Mexico": "MX",
             "Netherlands": "NL", "South Korea": "KR", "Spain": "ES", "Sweden": "SE",
             "UK": "GB", "USA": "US"
         };
-        // Use the same map for watch regions, but can be customized if needed
-        const watchRegionMap = countryMap;
+        const watchRegionMap = countryMap; // Use the same map for watch regions
 
         // --- DOM Elements ---
         const form = document.getElementById('recommendation-form');
         const resultsDiv = document.getElementById('results');
         const genreSelect = document.getElementById('genre');
         const tmdbRatingInput = document.getElementById('tmdb-rating');
-        const decadeSelect = document.getElementById('decade');
+        const startYearInput = document.getElementById('start-year'); // Year range input
+        const endYearInput = document.getElementById('end-year');     // Year range input
         const languageSelect = document.getElementById('language');
         const countrySelect = document.getElementById('country');
-        const watchCountrySelect = document.getElementById('watch-country'); // New selector
+        const watchCountrySelect = document.getElementById('watch-country'); // Watch region selector
         const messageBox = document.getElementById('message-box');
         const findButton = document.getElementById('find-button');
-        let messageTimeout;
+        let messageTimeout; // For hiding messages automatically
 
         // --- Populate Select Options ---
+        // Populates dropdown menus from map objects
         function populateSelect(selectElement, map, defaultValue = null) {
-            // Sort map by display name (key) alphabetically
+            // Sort map by display name (key) alphabetically for better UX
             const sortedEntries = Object.entries(map).sort((a, b) => a[0].localeCompare(b[0]));
 
             sortedEntries.forEach(([name, value]) => {
                 const option = document.createElement('option');
-                option.value = value; // Use the mapped value (ID or code)
-                option.textContent = name;
+                option.value = value; // The value sent to API (e.g., genre ID, country code)
+                option.textContent = name; // The text displayed to the user
                 if (value === defaultValue) {
-                    option.selected = true; // Set the default selection
+                    option.selected = true; // Set the default selection if provided
                 }
                 selectElement.appendChild(option);
             });
         }
 
+        // Call populateSelect for each dropdown
         populateSelect(genreSelect, genreMap);
         populateSelect(languageSelect, languageMap);
         populateSelect(countrySelect, countryMap);
         populateSelect(watchCountrySelect, watchRegionMap, 'US'); // Populate watch regions, default to US
 
-        // --- Functions ---
+        // --- Utility Functions ---
+        // Displays messages (errors or info) to the user
         function showMessage(message, type = 'error', duration = 4000) {
             messageBox.textContent = message;
-            messageBox.className = '';
-            messageBox.classList.add('show', type);
-            if (messageTimeout) clearTimeout(messageTimeout);
+            messageBox.className = ''; // Clear previous type classes
+            messageBox.classList.add('show', type); // Add 'show' and the type ('error' or 'info')
+            if (messageTimeout) clearTimeout(messageTimeout); // Clear existing timeout if any
+            // Set timeout to automatically hide the message
             messageTimeout = setTimeout(() => { messageBox.classList.remove('show'); }, duration);
         }
 
-        function getDecadeDates(selectedDecade) {
-            if (!selectedDecade) return { gte: null, lte: null };
-            if (selectedDecade === 'pre-1960') return { gte: null, lte: '1959-12-31' };
-            const startYear = parseInt(selectedDecade, 10);
-            const endYear = startYear + 9;
-            return { gte: `${startYear}-01-01`, lte: `${endYear}-12-31` };
-        }
-
-        // --- Function to fetch watch providers for multiple movies ---
+        // Fetches watch provider information for an array of movies
         async function fetchWatchProviders(movies) {
+            // Create an array of fetch promises
             const providerPromises = movies.map(movie => {
                 const providerUrl = `${tmdbBaseUrl}/movie/${movie.id}/watch/providers?api_key=${apiKey}`;
                 return fetch(providerUrl)
-                    .then(response => {
-                        if (!response.ok) {
-                            console.warn(`Failed to fetch providers for movie ${movie.id}: ${response.status}`);
-                            return null;
-                        }
-                        return response.json();
-                    })
+                    // If response is ok, parse JSON, otherwise return null
+                    .then(response => response.ok ? response.json() : null)
+                    // Catch network errors and return null
                     .catch(error => {
                         console.error(`Error fetching providers for movie ${movie.id}:`, error);
                         return null;
                     });
             });
 
+            // Wait for all promises to settle (either succeed or fail)
             const results = await Promise.allSettled(providerPromises);
 
-            const moviesWithProviders = movies.map((movie, index) => {
-                if (results[index].status === 'fulfilled' && results[index].value) {
-                    movie.watchProviders = results[index].value.results;
-                } else {
-                    movie.watchProviders = null;
-                }
+            // Map original movies, adding provider data if fetch was successful
+            return movies.map((movie, index) => {
+                // Check if the promise was fulfilled and returned data
+                movie.watchProviders = (results[index].status === 'fulfilled' && results[index].value)
+                    ? results[index].value.results // Assign provider results
+                    : null; // Assign null if fetch failed or returned null
                 return movie;
             });
-
-            return moviesWithProviders;
         }
 
 
-        // --- UPDATED: Function to display recommendations ---
-        // Now accepts watchCountryCode as an argument
+        // --- Display Results Function (Table Format) ---
+        // Renders the list of movies as an HTML table
         function displayResults(movies, watchCountryCode) {
             resultsDiv.innerHTML = ''; // Clear previous results or loading message
 
+            // Handle case where no movies are found
             if (!movies || movies.length === 0) {
-                resultsDiv.innerHTML = '<p class="text-center text-gray-500">No movies found matching your criteria.</p>';
+                resultsDiv.innerHTML = '<p class="text-center text-gray-500 p-4">No movies found matching your criteria to display in the table.</p>';
                 return;
             }
 
-            const list = document.createElement('ul');
-            list.className = 'space-y-3'; // Spacing between items
+            // Create the main table element
+            const table = document.createElement('table');
+            table.className = 'results-table w-full'; // Apply styling classes
 
+            // Create the table header (thead)
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            // Define table headers (dynamic watch country header)
+            const headers = ['Poster', 'Title', 'Year', 'Rating', 'Lang', `Watch (${watchCountryCode})`];
+
+            // Populate header cells (th)
+            headers.forEach((text, index) => {
+                const th = document.createElement('th');
+                th.textContent = text;
+                // Apply specific column classes based on index
+                if (index === 0) th.classList.add('col-poster');
+                if (index === 2) th.classList.add('col-year');
+                if (index === 3) th.classList.add('col-rating');
+                if (index === 4) th.classList.add('col-lang');
+                if (index === 5) th.classList.add('col-providers');
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Create the table body (tbody)
+            const tbody = document.createElement('tbody');
+            // Loop through each movie to create a table row
             movies.forEach(movie => {
-                const listItem = document.createElement('li');
-                listItem.className = 'movie-card bg-white p-3 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 flex items-start gap-3';
+                const row = document.createElement('tr');
 
-                // Movie Poster
+                // --- Create Table Cells (td) for each movie ---
+
+                // 1. Poster Cell
+                const cellPoster = document.createElement('td');
+                cellPoster.classList.add('col-poster'); // Apply column style
                 const posterImg = document.createElement('img');
-                posterImg.className = 'movie-poster flex-shrink-0';
-                posterImg.src = movie.poster_path ? `${imageBaseUrl}${movie.poster_path}` : 'https://placehold.co/60x90/e2e8f0/cbd5e0?text=N/A';
-                posterImg.alt = `Poster for ${movie.title}`;
-                posterImg.onerror = function() { this.onerror=null; this.src='https://placehold.co/60x90/e2e8f0/cbd5e0?text=Error'; };
-                listItem.appendChild(posterImg);
+                posterImg.className = 'movie-poster-table'; // Table-specific poster style
+                posterImg.src = movie.poster_path ? `${imageBaseUrl}${movie.poster_path}` : 'https://placehold.co/40x60/e2e8f0/cbd5e0?text=N/A'; // Placeholder image
+                posterImg.alt = `Poster`; // Simple alt text
+                // Fallback for broken images
+                posterImg.onerror = function() { this.onerror=null; this.src='https://placehold.co/40x60/e2e8f0/cbd5e0?text=Err'; };
+                cellPoster.appendChild(posterImg);
+                row.appendChild(cellPoster);
 
-                // Movie Info Div
-                const infoDiv = document.createElement('div');
-                infoDiv.className = 'flex-grow';
+                // 2. Title Cell
+                const cellTitle = document.createElement('td');
+                cellTitle.textContent = movie.title || 'N/A'; // Movie title
+                cellTitle.classList.add('font-medium', 'text-gray-900'); // Styling
+                row.appendChild(cellTitle);
 
-                // Title and Year
-                const titleYear = document.createElement('h3');
-                titleYear.className = 'text-md font-semibold text-indigo-700 mb-1';
-                const releaseYear = movie.release_date ? movie.release_date.substring(0, 4) : 'N/A';
-                titleYear.textContent = `${movie.title} (${releaseYear})`;
-                infoDiv.appendChild(titleYear);
+                // 3. Year Cell
+                const cellYear = document.createElement('td');
+                cellYear.classList.add('col-year'); // Apply column style
+                // Extract year from release_date string
+                cellYear.textContent = movie.release_date ? movie.release_date.substring(0, 4) : 'N/A';
+                row.appendChild(cellYear);
 
-                // Details (Rating, Language)
-                const details = document.createElement('div');
-                details.className = 'text-xs text-gray-600 space-y-0.5 mb-2'; // Added margin-bottom
+                // 4. Rating Cell
+                const cellRating = document.createElement('td');
+                cellRating.classList.add('col-rating'); // Apply column style
+                // Format rating and include vote count
                 const rating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
-                const langCode = movie.original_language || 'N/A';
-                details.innerHTML = `
-                    <p><strong class="font-medium text-gray-700">TMDb Rating:</strong> ${rating}/10 (${movie.vote_count} votes)</p>
-                    <p><strong class="font-medium text-gray-700">Language:</strong> ${langCode.toUpperCase()}</p>
-                `;
-                infoDiv.appendChild(details);
+                cellRating.textContent = `${rating}/10 (${movie.vote_count} votes)`;
+                row.appendChild(cellRating);
 
-                // --- UPDATED: Where to Watch Section ---
-                const watchDiv = document.createElement('div');
-                watchDiv.className = 'mt-1'; // Add some top margin
+                // 5. Language Cell
+                const cellLang = document.createElement('td');
+                cellLang.classList.add('col-lang'); // Apply column style
+                // Display language code in uppercase
+                cellLang.textContent = movie.original_language ? movie.original_language.toUpperCase() : 'N/A';
+                row.appendChild(cellLang);
 
-                const watchTitle = document.createElement('p');
-                watchTitle.className = 'text-xs font-medium text-gray-700 mb-0.5';
-                // Dynamically set title based on selected country
-                watchTitle.textContent = `Where to Watch (${watchCountryCode} Stream):`;
-                watchDiv.appendChild(watchTitle);
-
+                // 6. Watch Providers Cell
+                const cellProviders = document.createElement('td');
+                cellProviders.classList.add('col-providers'); // Apply column style
                 const providerListDiv = document.createElement('div');
-                providerListDiv.className = 'provider-list text-xs text-gray-600';
+                providerListDiv.className = 'provider-list'; // Use existing class for styling spans
 
-                // Use bracket notation to access providers for the selected country
-                // Use optional chaining (?.) to safely access nested properties
-                const selectedCountryProviders = movie.watchProviders?.[watchCountryCode]?.flatrate;
+                // Safely access provider data for the selected country using optional chaining (?.) and bracket notation []
+                const selectedCountryProviders = movie.watchProviders?.[watchCountryCode]?.flatrate; // Focus on 'flatrate' (streaming)
 
+                // Check if provider data exists for the selected country
                 if (selectedCountryProviders && selectedCountryProviders.length > 0) {
+                    // Display provider names
                     selectedCountryProviders.forEach(provider => {
                         const providerSpan = document.createElement('span');
                         providerSpan.textContent = provider.provider_name;
                         providerListDiv.appendChild(providerSpan);
                     });
-                     // Add TMDb link if available for the selected country
+                    // Add link to TMDb watch options if available
                     const tmdbLink = movie.watchProviders?.[watchCountryCode]?.link;
                     if (tmdbLink) {
                         const linkEl = document.createElement('a');
                         linkEl.href = tmdbLink;
                         linkEl.target = '_blank'; // Open in new tab
-                        linkEl.rel = 'noopener noreferrer';
-                        linkEl.textContent = 'More options on TMDb';
-                        linkEl.className = 'text-indigo-600 hover:text-indigo-800 text-xs block mt-1';
+                        linkEl.rel = 'noopener noreferrer'; // Security best practice
+                        linkEl.textContent = 'More options'; // Shorter text for table
+                        linkEl.className = 'text-indigo-600 hover:text-indigo-800 text-xs block mt-1'; // Styling
                         providerListDiv.appendChild(linkEl);
                     }
                 } else if (movie.watchProviders === null) {
-                     // Indicate if fetching providers failed for this movie
-                     providerListDiv.innerHTML = `<span class="text-gray-400 text-xs italic">Could not fetch provider info.</span>`;
+                     // Indicate if fetching providers failed for this specific movie
+                     providerListDiv.innerHTML = `<span class="text-gray-400 text-xs italic">Fetch failed</span>`;
+                } else {
+                    // Indicate if no providers were found for the selected country
+                    providerListDiv.innerHTML = `<span class="text-gray-400 text-xs italic">None found</span>`;
                 }
-                 else {
-                    // Update message if no providers found for the *selected* country
-                    providerListDiv.innerHTML = `<span class="text-gray-400 text-xs italic">No streaming providers found for ${watchCountryCode}.</span>`;
-                }
+                cellProviders.appendChild(providerListDiv);
+                row.appendChild(cellProviders);
 
-                watchDiv.appendChild(providerListDiv);
-                infoDiv.appendChild(watchDiv);
-                // --- End Where to Watch Section ---
-
-
-                listItem.appendChild(infoDiv);
-                list.appendChild(listItem);
+                // Append the completed row to the table body
+                tbody.appendChild(row);
             });
 
-            resultsDiv.appendChild(list);
+            // Append the table body to the table
+            table.appendChild(tbody);
+            // Append the complete table to the results container div
+            resultsDiv.appendChild(table);
         }
 
-        // --- UPDATED: Event Listener ---
+        // --- Form Submission Event Listener ---
         form.addEventListener('submit', async (event) => {
-            event.preventDefault();
+            event.preventDefault(); // Prevent default page reload
 
+            // Check if API key is entered
             if (apiKey === 'YOUR_TMDB_API_KEY_HERE' || !apiKey) {
                 showMessage('Please enter your TMDb API key in the script section first.', 'error');
                 return;
             }
 
-            // --- Stage 1: Discover Movies ---
-            findButton.disabled = true;
-            findButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Finding movies...`;
-            resultsDiv.innerHTML = '<p class="text-center text-gray-500">Finding matching movies...</p>';
-
+            // --- Get and Validate User Inputs ---
             const selectedGenreId = genreSelect.value;
-            const minTmdbRating = parseFloat(tmdbRatingInput.value) || 0;
-            const selectedDecade = decadeSelect.value;
+            const minTmdbRating = parseFloat(tmdbRatingInput.value) || 0; // Default to 0 if empty/invalid
             const selectedLangCode = languageSelect.value;
             const selectedCountryCode = countrySelect.value;
-            const selectedWatchCountryCode = watchCountrySelect.value; // Get selected watch country
-            const { gte: releaseDateGte, lte: releaseDateLte } = getDecadeDates(selectedDecade);
+            const selectedWatchCountryCode = watchCountrySelect.value; // Get selected watch region
 
+            // Get and validate start/end years
+            const startYearStr = startYearInput.value.trim();
+            const endYearStr = endYearInput.value.trim();
+            let startYear = startYearStr ? parseInt(startYearStr, 10) : null;
+            let endYear = endYearStr ? parseInt(endYearStr, 10) : null;
+            let releaseDateGte = null; // API param for start date
+            let releaseDateLte = null; // API param for end date
+
+            // Basic year validation logic
+            const currentYear = new Date().getFullYear();
+            const earliestYear = 1874; // Approx year of first films
+            if (startYear !== null && (isNaN(startYear) || startYear < earliestYear || startYear > currentYear + 5)) {
+                 showMessage(`Invalid Start Year. Please enter a year between ${earliestYear} and ${currentYear + 5}.`, 'error'); return; // Stop if invalid
+            }
+             if (endYear !== null && (isNaN(endYear) || endYear < earliestYear || endYear > currentYear + 5)) {
+                 showMessage(`Invalid End Year. Please enter a year between ${earliestYear} and ${currentYear + 5}.`, 'error'); return; // Stop if invalid
+            }
+            // Check if start year is after end year
+            if (startYear !== null && endYear !== null && startYear > endYear) {
+                showMessage('Start Year cannot be after End Year.', 'error'); return; // Stop if invalid range
+            }
+
+            // Format dates for TMDb API query (YYYY-MM-DD)
+            if (startYear) releaseDateGte = `${startYear}-01-01`;
+            if (endYear) releaseDateLte = `${endYear}-12-31`;
+
+            // --- Start API Fetch Process ---
+
+            // Disable button and show loading state
+            findButton.disabled = true;
+            findButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Finding movies...`;
+            resultsDiv.innerHTML = '<p class="text-center text-gray-500 p-4">Finding matching movies...</p>'; // Update loading text
+
+            // Construct the TMDb Discover API URL
             const discoverUrl = new URL(`${tmdbBaseUrl}/discover/movie`);
+            // Add common parameters
             discoverUrl.searchParams.append('api_key', apiKey);
             discoverUrl.searchParams.append('include_adult', 'false');
             discoverUrl.searchParams.append('include_video', 'false');
-            discoverUrl.searchParams.append('language', 'en-US');
-            discoverUrl.searchParams.append('sort_by', 'vote_average.desc');
-            discoverUrl.searchParams.append('vote_count.gte', 100);
+            discoverUrl.searchParams.append('language', 'en-US'); // For metadata language
+            discoverUrl.searchParams.append('sort_by', 'vote_average.desc'); // Sort by rating
+            discoverUrl.searchParams.append('vote_count.gte', 100); // Minimum votes for reliability
+
+            // Add parameters based on user selections (if they exist)
             if (selectedGenreId) discoverUrl.searchParams.append('with_genres', selectedGenreId);
             if (minTmdbRating > 0) discoverUrl.searchParams.append('vote_average.gte', minTmdbRating.toFixed(1));
-            if (releaseDateGte) discoverUrl.searchParams.append('primary_release_date.gte', releaseDateGte);
-            if (releaseDateLte) discoverUrl.searchParams.append('primary_release_date.lte', releaseDateLte);
+            if (releaseDateGte) discoverUrl.searchParams.append('primary_release_date.gte', releaseDateGte); // Use formatted start date
+            if (releaseDateLte) discoverUrl.searchParams.append('primary_release_date.lte', releaseDateLte); // Use formatted end date
             if (selectedLangCode) discoverUrl.searchParams.append('with_original_language', selectedLangCode);
             if (selectedCountryCode) discoverUrl.searchParams.append('with_origin_country', selectedCountryCode);
 
-            let initialMovies = [];
+            let initialMovies = []; // To store results from the first API call
             try {
+                // --- Stage 1: Discover Movies ---
                 const response = await fetch(discoverUrl);
+                // Handle API errors (like invalid key, rate limits)
                 if (!response.ok) {
                     let errorMsg = `Error finding movies: ${response.status} ${response.statusText}`;
-                    try { const errorData = await response.json(); if (errorData.status_message) errorMsg = `TMDb Error: ${errorData.status_message}`; } catch (e) {}
-                    throw new Error(errorMsg);
+                    try { // Try to get specific error message from TMDb
+                        const errorData = await response.json();
+                        if (errorData.status_message) errorMsg = `TMDb Error: ${errorData.status_message}`;
+                    } catch (e) { /* Ignore if error response isn't JSON */ }
+                    throw new Error(errorMsg); // Throw error to be caught below
                 }
+                // Parse successful response
                 const data = await response.json();
-                initialMovies = data.results;
+                initialMovies = data.results; // Get the array of movies
 
+                // If no movies found, display message and stop
                 if (initialMovies.length === 0) {
-                     // Pass the selected watch country even if no movies found, for consistency
-                     displayResults([], selectedWatchCountryCode);
-                     findButton.disabled = false;
+                     displayResults([], selectedWatchCountryCode); // Display empty table message
+                     findButton.disabled = false; // Re-enable button
                      findButton.innerHTML = `<span class="lucide">&#xea7e;</span> Find Movies`;
-                     return; // Stop processing if no movies found
+                     return; // Exit the submit handler
                  }
 
-                // --- Stage 2: Fetch Watch Providers ---
+                // --- Stage 2: Fetch Watch Providers (only if movies were found) ---
+                // Update loading state for the second step
                 findButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">...</svg> Fetching providers...`;
-                resultsDiv.innerHTML = '<p class="text-center text-gray-500">Fetching watch provider information...</p>';
+                resultsDiv.innerHTML = '<p class="text-center text-gray-500 p-4">Fetching watch provider information...</p>';
 
+                // Fetch providers and add them to the movie objects
                 const moviesWithProviders = await fetchWatchProviders(initialMovies);
-                // Pass the selected watch country to displayResults
+                // Display the final results in the table
                 displayResults(moviesWithProviders, selectedWatchCountryCode);
 
             } catch (error) {
+                // Handle any errors during the fetch process
                 console.error("API Fetch Error:", error);
                 showMessage(`Failed to process request. ${error.message}`, 'error');
-                resultsDiv.innerHTML = `<p class="text-center text-red-600">Error loading recommendations. Check console for details.</p>`;
+                // Show error message in the results area
+                resultsDiv.innerHTML = `<p class="text-center text-red-600 p-4">Error loading recommendations. Check console for details.</p>`;
             } finally {
+                 // This block always runs, whether try succeeded or failed
+                 // Re-enable the button and restore its text
                  findButton.disabled = false;
                  findButton.innerHTML = `<span class="lucide">&#xea7e;</span> Find Movies`;
             }
         });
 
-        // Initial placeholder message
-        resultsDiv.innerHTML = '<p class="text-center text-gray-500">Enter your preferences and API key in the script, then click "Find Movies".</p>';
+        // Set the initial placeholder message in the results div when the page loads
+        resultsDiv.innerHTML = '<p class="text-center text-gray-500 p-4">Enter your preferences and API key in the script, then click "Find Movies". Results will be shown here as a table.</p>';
 
     </script>
 
