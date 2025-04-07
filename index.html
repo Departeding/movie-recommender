@@ -223,8 +223,12 @@
         let messageTimeout;
 
         // --- Global variables to store current slider values ---
-        let currentStartYear = 1990; // Default start year
-        let currentEndYear = 2020;   // Default end year
+       let currentStartYear = 1990;
+        let currentEndYear = 2020;
+        let currentMovieData = [];
+        let currentWatchCountry = 'US';
+        let sortKey = 'vote_average';
+        let sortAsc = false;
 
         // --- Populate Select Options --- (Unchanged)
         function populateSelect(selectElement, map, defaultValue = null) {
@@ -277,6 +281,46 @@
         function showMessage(message, type = 'error', duration = 4000) { /* ... */ }
         async function fetchWatchProviders(movies) { /* ... */ }
 
+        // --- Sorting Function ---
+        function sortData(key) {
+            if (sortKey === key) { sortAsc = !sortAsc; } else { sortKey = key; sortAsc = true; }
+            const sortedData = [...currentMovieData].sort((a, b) => {
+                let valA, valB;
+                switch (key) {
+                    case 'title':
+                        valA = a.title || ''; valB = b.title || '';
+                        return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                    case 'year':
+                        valA = a.release_date ? parseInt(a.release_date.substring(0, 4), 10) : 0;
+                        valB = b.release_date ? parseInt(b.release_date.substring(0, 4), 10) : 0;
+                        valA = isNaN(valA) ? 0 : valA; valB = isNaN(valB) ? 0 : valB;
+                        return sortAsc ? valA - valB : valB - valA;
+                    case 'rating':
+                        valA = typeof a.vote_average === 'number' ? a.vote_average : -1;
+                        valB = typeof b.vote_average === 'number' ? b.vote_average : -1;
+                        return sortAsc ? valA - valB : valB - valA;
+                    case 'lang':
+                        valA = a.original_language || ''; valB = b.original_language || '';
+                        return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                    default: return 0;
+                }
+            });
+            displayResults(sortedData, currentWatchCountry);
+        }
+
+        // --- Setup Header Clicks ---
+        function setupHeaderClicks() {
+            const headers = resultsDiv.querySelectorAll('.sortable-header');
+            headers.forEach(header => {
+                header.replaceWith(header.cloneNode(true)); // Clone to remove old listeners
+            });
+            resultsDiv.querySelectorAll('.sortable-header').forEach(header => {
+                 header.addEventListener('click', () => { // Add new listener
+                    const key = header.getAttribute('data-sort-key');
+                    if (key) { sortData(key); }
+                });
+            });
+        }
 
         // --- Display Results Function (Table Format) --- (Unchanged)
          function displayResults(movies, watchCountryCode) {
