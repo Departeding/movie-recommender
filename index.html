@@ -90,7 +90,7 @@
         </h1>
 
         <form id="recommendation-form" class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-6 mb-6 sm:mb-8">
-           //------------------- Row 1
+           
             <div>
                 <label for="genre" class="block text-sm font-medium text-gray-700 mb-1">Genre</label>
                 <select id="genre" name="genre" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"> <option value="">Any</option> </select>
@@ -104,7 +104,7 @@
                 <div id="year-slider" class="mt-2 mb-1"></div>
                 <div class="slider-values"> <span id="start-year-display">1990</span> <span id="end-year-display">2020</span> </div>
             </div>
-            //------------------- Row 2 
+            
             <div>
                 <label for="language" class="block text-sm font-medium text-gray-700 mb-1">Original Language</label>
                 <select id="language" name="language" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"> <option value="">Any</option> </select>
@@ -117,7 +117,7 @@
                 <label for="watch-country" class="block text-sm font-medium text-gray-700 mb-1">Watch Region (Providers)</label>
                 <select id="watch-country" name="watch-country" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"> </select>
             </div>
-            /* Submit Button */
+           
             <div class="md:col-span-3 flex justify-center mt-4">
                 <button type="submit" id="find-button" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                     <span class="lucide">&#xea7e;</span> Find Movies
@@ -125,7 +125,7 @@
             </div>
         </form>
 
-        /* Results Area */
+        
         <div class="mt-8">
             <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 text-center">Recommendations</h2>
             <div id="results" class="bg-gray-50 p-1 sm:p-2 rounded-lg border border-gray-200 min-h-[200px] max-h-[400px] overflow-y-auto overflow-x-auto">
@@ -134,7 +134,7 @@
         </div>
     </div>
 
-    /* Message Box Container */
+    
     <div id="message-box"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
