@@ -279,8 +279,73 @@
 
 
         // --- Display Results Function (Table Format) --- (Unchanged)
-        function displayResults(movies, watchCountryCode) { /* ... */ }
-
+         function displayResults(movies, watchCountryCode) {
+             resultsDiv.innerHTML = '';
+             if (!movies || movies.length === 0) {
+                 resultsDiv.innerHTML = '<p class="text-center text-gray-500 p-4">No movies found matching your criteria to display in the table.</p>';
+                 return;
+             }
+             const table = document.createElement('table'); table.className = 'results-table w-full';
+             const thead = document.createElement('thead'); const headerRow = document.createElement('tr');
+             const headerConfig = [
+                 { text: 'Poster', key: null, class: 'col-poster' }, { text: 'Title', key: 'title', class: '' },
+                 { text: 'Year', key: 'year', class: 'col-year' }, { text: 'Rating', key: 'rating', class: 'col-rating' },
+                 { text: 'Lang', key: 'lang', class: 'col-lang' }, { text: `Watch (${watchCountryCode})`, key: null, class: 'col-providers' }
+             ];
+             headerConfig.forEach(config => {
+                 const th = document.createElement('th'); th.textContent = config.text;
+                 if (config.class) th.classList.add(config.class);
+                 if (config.key) {
+                     th.classList.add('sortable-header'); th.setAttribute('data-sort-key', config.key);
+                     const indicatorSpan = document.createElement('span'); indicatorSpan.classList.add('sort-indicator');
+                     if (config.key === sortKey) {
+                         indicatorSpan.textContent = sortAsc ? ' ▲' : ' ▼';
+                         th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+                     } else { indicatorSpan.textContent = ''; }
+                     th.appendChild(indicatorSpan);
+                 }
+                 headerRow.appendChild(th);
+             });
+             thead.appendChild(headerRow); table.appendChild(thead);
+             const tbody = document.createElement('tbody');
+             movies.forEach(movie => {
+                 const row = document.createElement('tr');
+                 // Poster
+                 const cellPoster = document.createElement('td'); cellPoster.classList.add('col-poster');
+                 const posterImg = document.createElement('img'); posterImg.className = 'movie-poster-table';
+                 posterImg.src = movie.poster_path ? `${imageBaseUrl}${movie.poster_path}` : 'https://placehold.co/40x60/e2e8f0/cbd5e0?text=N/A';
+                 posterImg.alt = `Poster`; posterImg.onerror = function() { this.onerror=null; this.src='https://placehold.co/40x60/e2e8f0/cbd5e0?text=Err'; };
+                 cellPoster.appendChild(posterImg); row.appendChild(cellPoster);
+                 // Title
+                 const cellTitle = document.createElement('td'); cellTitle.textContent = movie.title || 'N/A';
+                 cellTitle.classList.add('font-medium', 'text-gray-900'); row.appendChild(cellTitle);
+                 // Year
+                 const cellYear = document.createElement('td'); cellYear.classList.add('col-year');
+                 cellYear.textContent = movie.release_date ? movie.release_date.substring(0, 4) : 'N/A'; row.appendChild(cellYear);
+                 // Rating
+                 const cellRating = document.createElement('td'); cellRating.classList.add('col-rating');
+                 const rating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
+                 cellRating.textContent = `${rating}/10 (${movie.vote_count} votes)`; row.appendChild(cellRating);
+                 // Language
+                 const cellLang = document.createElement('td'); cellLang.classList.add('col-lang');
+                 cellLang.textContent = movie.original_language ? movie.original_language.toUpperCase() : 'N/A'; row.appendChild(cellLang);
+                 // Providers
+                 const cellProviders = document.createElement('td'); cellProviders.classList.add('col-providers');
+                 const providerListDiv = document.createElement('div'); providerListDiv.className = 'provider-list';
+                 const selectedCountryProviders = movie.watchProviders?.[watchCountryCode]?.flatrate;
+                 if (selectedCountryProviders && selectedCountryProviders.length > 0) {
+                     selectedCountryProviders.forEach(provider => { const providerSpan = document.createElement('span'); providerSpan.textContent = provider.provider_name; providerListDiv.appendChild(providerSpan); });
+                     const tmdbLink = movie.watchProviders?.[watchCountryCode]?.link;
+                     if (tmdbLink) { const linkEl = document.createElement('a'); linkEl.href = tmdbLink; linkEl.target = '_blank'; linkEl.rel = 'noopener noreferrer'; linkEl.textContent = 'More options'; linkEl.className = 'text-indigo-600 hover:text-indigo-800 text-xs block mt-1'; providerListDiv.appendChild(linkEl); }
+                 } else if (movie.watchProviders === null) { providerListDiv.innerHTML = `<span class="text-gray-400 text-xs italic">Fetch failed</span>`; }
+                 else { providerListDiv.innerHTML = `<span class="text-gray-400 text-xs italic">None found</span>`; }
+                 cellProviders.appendChild(providerListDiv); row.appendChild(cellProviders);
+                 tbody.appendChild(row);
+             });
+             table.appendChild(tbody); resultsDiv.appendChild(table);
+             // Setup clicks AFTER table is in DOM
+             setupHeaderClicks();
+        }
 
         // --- Form Submission Event Listener --- (Updated Year Handling)
         form.addEventListener('submit', async (event) => {
