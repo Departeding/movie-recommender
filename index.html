@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Recommender</title>
+    <title>Movie Recommender (Pagination Added)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -73,38 +73,71 @@
        .noUi-handle {
            border: 1px solid #d1d5db; border-radius: 50%; background: #ffffff;
            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-           cursor: grab; width: 8px; height: 8px; right: -4px; top: 0px; /* Centered */
+           cursor: grab; width: 14px; height: 14px; right: -7px; top: -3px; /* Smaller handles */
        }
         .noUi-handle:focus { outline: none; }
         .noUi-handle:active { cursor: grabbing; }
         .noUi-handle::before, .noUi-handle::after { display: none; }
 
         .slider-values { display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.875rem; color: #4b5563; }
+
+        /* Pagination Styling */
+        .pagination-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0.5rem; /* Add some padding */
+            margin-top: 0.5rem; /* Space above pagination */
+            border-top: 1px solid #e5e7eb; /* Separator line */
+        }
+        .pagination-controls button {
+            background-color: #4f46e5; /* Indigo-600 */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem; /* rounded-md */
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* medium */
+            transition: background-color 0.15s ease-in-out;
+            border: none;
+        }
+        .pagination-controls button:hover:not(:disabled) {
+            background-color: #4338ca; /* Indigo-700 */
+        }
+        .pagination-controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #page-info {
+            font-size: 0.875rem; /* text-sm */
+            color: #4b5563; /* Gray-600 */
+        }
+
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100">
 
     <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg w-full max-w-4xl">
         <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6 sm:mb-8 flex items-center justify-center gap-2">
-            <span class="lucide">&#xea5c;</span>Movie Recommender
+            <span class="lucide">&#xea5c;</span> Movie Recommender (Pagination Added)
         </h1>
 
+        {/* Form structure remains the same */}
         <form id="recommendation-form" class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-6 mb-6 sm:mb-8">
-           
+            {/* Row 1 */}
             <div>
                 <label for="genre" class="block text-sm font-medium text-gray-700 mb-1">Genre</label>
                 <select id="genre" name="genre" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"> <option value="">Any</option> </select>
             </div>
             <div>
-                <label for="tmdb-rating" class="block text-sm font-medium text-gray-700 mb-1"> Min Rating (0-10)</label>
+                <label for="tmdb-rating" class="block text-sm font-medium text-gray-700 mb-1">Min TMDb Rating (0-10)</label>
                 <input type="number" id="tmdb-rating" name="tmdb-rating" min="0" max="10" step="0.1" placeholder="e.g., 7.0" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Release Year Range</label>
-                <div id="year-slider" class="mt-4 mb-2"></div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Release Year Range</label>
+                <div id="year-slider" class="mt-2 mb-1"></div>
                 <div class="slider-values"> <span id="start-year-display">1990</span> <span id="end-year-display">2020</span> </div>
             </div>
-            
+            {/* Row 2 */}
             <div>
                 <label for="language" class="block text-sm font-medium text-gray-700 mb-1">Original Language</label>
                 <select id="language" name="language" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"> <option value="">Any</option> </select>
@@ -117,24 +150,30 @@
                 <label for="watch-country" class="block text-sm font-medium text-gray-700 mb-1">Watch Region (Providers)</label>
                 <select id="watch-country" name="watch-country" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"> </select>
             </div>
-           
+            {/* Submit Button */}
             <div class="md:col-span-3 flex justify-center mt-4">
                 <button type="submit" id="find-button" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span class="lucide">&#xea7e;</span>Find Movies
+                    <span class="lucide">&#xea7e;</span> Find Movies
                 </button>
             </div>
         </form>
 
-        
+        {/* Results Area */}
         <div class="mt-8">
             <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 text-center">Recommendations</h2>
             <div id="results" class="bg-gray-50 p-1 sm:p-2 rounded-lg border border-gray-200 min-h-[200px] max-h-[400px] overflow-y-auto overflow-x-auto">
                 <p class="text-center text-gray-500 p-4">Enter your preferences and API key, then click "Find Movies". Results will be shown here as a table.</p>
             </div>
+             {/* NEW: Pagination Controls Container */}
+             <div id="pagination-controls" class="pagination-controls" style="display: none;"> {/* Hidden initially */}
+                <button id="prev-button" disabled>&lt; Previous</button>
+                <span id="page-info">Page 1 of 1</span>
+                <button id="next-button" disabled>Next &gt;</button>
+            </div>
         </div>
     </div>
 
-    
+    {/* Message Box Container */}
     <div id="message-box"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
@@ -145,7 +184,7 @@
         const tmdbBaseUrl = 'https://api.themoviedb.org/3';
         const imageBaseUrl = 'https://image.tmdb.org/t/p/w200';
 
-        // --- Mappings ---
+        // --- Mappings --- (Unchanged)
         const genreMap = { "Action": 28, "Adventure": 12, "Animation": 16, "Comedy": 35, "Crime": 80, "Documentary": 99, "Drama": 18, "Family": 10751, "Fantasy": 14, "History": 36, "Horror": 27, "Music": 10402, "Mystery": 9648, "Romance": 10749, "Sci-Fi": 878, "TV Movie": 10770, "Thriller": 53, "War": 10752, "Western": 37 };
         const languageMap = { "English": "en", "Spanish": "es", "French": "fr", "German": "de", "Japanese": "ja", "Korean": "ko", "Hindi": "hi", "Mandarin": "zh", "Italian": "it", "Portuguese": "pt" };
         const countryMap = { "Australia": "AU", "Brazil": "BR", "Canada": "CA", "China": "CN", "France": "FR", "Germany": "DE", "India": "IN", "Italy": "IT", "Japan": "JP", "Mexico": "MX", "Netherlands": "NL", "South Korea": "KR", "Spain": "ES", "Sweden": "SE", "UK": "GB", "USA": "US" };
@@ -164,17 +203,272 @@
         const yearSliderElement = document.getElementById('year-slider');
         const startYearDisplay = document.getElementById('start-year-display');
         const endYearDisplay = document.getElementById('end-year-display');
+        const paginationControls = document.getElementById('pagination-controls'); // New
+        const prevButton = document.getElementById('prev-button');             // New
+        const nextButton = document.getElementById('next-button');             // New
+        const pageInfo = document.getElementById('page-info');                 // New
         let messageTimeout;
 
         // --- Global State Variables ---
         let currentStartYear = 1990;
         let currentEndYear = 2020;
-        let currentMovieData = [];
+        let currentMovieData = []; // Holds data for the *current* page only
         let currentWatchCountry = 'US';
         let sortKey = 'vote_average';
         let sortAsc = false;
+        let currentPage = 1;      // New state for pagination
+        let totalPages = 1;       // New state for pagination
+        let totalResults = 0;     // New state for pagination
+        let currentFilters = {};  // New: Store current search filters for pagination
 
-        // --- Populate Select Options ---
+        // --- Populate Select Options --- (Unchanged)
+        function populateSelect(selectElement, map, defaultValue = null) { /* ... */ }
+        populateSelect(genreSelect, genreMap);
+        populateSelect(languageSelect, languageMap);
+        populateSelect(countrySelect, countryMap);
+        populateSelect(watchCountrySelect, watchRegionMap, 'US');
+
+        // --- Utility Functions --- (showMessage, fetchWatchProviders unchanged)
+        function showMessage(message, type = 'error', duration = 4000) { /* ... */ }
+        async function fetchWatchProviders(movies) { /* ... */ }
+
+        // --- Sorting Function --- (Unchanged)
+        function sortData(key) { /* ... */ }
+
+        // --- Setup Header Clicks --- (Unchanged)
+        function setupHeaderClicks() { /* ... */ }
+
+        // --- Display Results Function (Table Format) --- (Unchanged)
+        function displayResults(movies, watchCountryCode) { /* ... */ }
+
+        // --- NEW: Update Pagination Controls ---
+        function updatePaginationControls() {
+            if (totalResults > 0) {
+                pageInfo.textContent = `Page ${currentPage} of ${totalPages} (${totalResults} results)`;
+                prevButton.disabled = currentPage <= 1;
+                nextButton.disabled = currentPage >= totalPages;
+                paginationControls.style.display = 'flex'; // Show controls
+            } else {
+                paginationControls.style.display = 'none'; // Hide controls if no results
+            }
+        }
+
+        // --- NEW: Function to Fetch a Specific Page ---
+        async function fetchPage(pageNumber) {
+            // Use stored filters
+            const { genreId, rating, langCode, originCountry, releaseGte, releaseLte } = currentFilters;
+            const watchCountry = currentWatchCountry; // Use current watch country
+
+            // Disable buttons during fetch
+            findButton.disabled = true;
+            prevButton.disabled = true;
+            nextButton.disabled = true;
+            resultsDiv.innerHTML = `<p class="text-center text-gray-500 p-4">Loading page ${pageNumber}...</p>`; // Loading indicator
+
+            // Build URL with page number
+            const discoverUrl = new URL(`${tmdbBaseUrl}/discover/movie`);
+            discoverUrl.searchParams.append('api_key', apiKey);
+            discoverUrl.searchParams.append('include_adult', 'false');
+            discoverUrl.searchParams.append('include_video', 'false');
+            discoverUrl.searchParams.append('language', 'en-US');
+            discoverUrl.searchParams.append('sort_by', 'vote_average.desc'); // Or current sort? Keep API default for now
+            discoverUrl.searchParams.append('vote_count.gte', 100);
+            discoverUrl.searchParams.append('page', pageNumber); // Add page number
+            // Add stored filters
+            if (genreId) discoverUrl.searchParams.append('with_genres', genreId);
+            if (rating > 0) discoverUrl.searchParams.append('vote_average.gte', rating.toFixed(1));
+            if (releaseGte) discoverUrl.searchParams.append('primary_release_date.gte', releaseGte);
+            if (releaseLte) discoverUrl.searchParams.append('primary_release_date.lte', releaseLte);
+            if (langCode) discoverUrl.searchParams.append('with_original_language', langCode);
+            if (originCountry) discoverUrl.searchParams.append('with_origin_country', originCountry);
+
+            currentMovieData = []; // Clear old page data
+
+            try {
+                // Stage 1: Discover Movies for the requested page
+                const response = await fetch(discoverUrl);
+                if (!response.ok) {
+                    let errorMsg = `Error fetching page ${pageNumber}: ${response.status} ${response.statusText}`;
+                    try { const errorData = await response.json(); if (errorData.status_message) errorMsg = `TMDb Error: ${errorData.status_message}`; } catch (e) {}
+                    throw new Error(errorMsg);
+                }
+                const data = await response.json();
+                let newMovies = data.results;
+
+                // Update pagination state (should ideally be same as first fetch, but good practice)
+                totalPages = data.total_pages;
+                totalResults = data.total_results;
+                currentPage = data.page; // Update current page based on response
+
+                if (newMovies.length === 0 && pageNumber > 1) {
+                     // Handle case where user tries to go past last page somehow
+                     showMessage(`No results found on page ${pageNumber}.`, 'info');
+                     // Optionally fetch previous page again or just show empty
+                     // For simplicity, just show empty and update controls
+                     displayResults([], watchCountry);
+                     updatePaginationControls();
+                     return; // Stop processing
+                 }
+
+                // Stage 2: Fetch Watch Providers for the new page's movies
+                resultsDiv.innerHTML = '<p class="text-center text-gray-500 p-4">Fetching watch provider information...</p>';
+                const moviesWithProviders = await fetchWatchProviders(newMovies);
+
+                currentMovieData = moviesWithProviders; // Store new page's data globally
+                // Reset sort state when changing pages (optional, could preserve)
+                sortKey = 'vote_average';
+                sortAsc = false;
+                displayResults(currentMovieData, watchCountry); // Display new page
+
+            } catch (error) {
+                console.error("API Fetch Error:", error);
+                showMessage(`Failed to fetch page ${pageNumber}. ${error.message}`, 'error');
+                resultsDiv.innerHTML = `<p class="text-center text-red-600 p-4">Error loading page ${pageNumber}. Check console.</p>`;
+                // Reset pagination display on error? Maybe not, keep current page info
+            } finally {
+                // Re-enable search button and update pagination controls regardless of success/error
+                findButton.disabled = false;
+                updatePaginationControls(); // This will re-enable prev/next based on updated state
+            }
+        }
+
+
+        // --- Form Submission Event Listener --- UPDATED for Pagination ---
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (apiKey === 'YOUR_TMDB_API_KEY_HERE' || !apiKey) { showMessage('Please enter your TMDb API key in the script section first.', 'error'); return; }
+
+            // Get Inputs
+            const selectedGenreId = genreSelect.value;
+            const minTmdbRating = parseFloat(tmdbRatingInput.value) || 0;
+            const selectedLangCode = languageSelect.value;
+            const selectedCountryCode = countrySelect.value;
+            const selectedWatchCountryCode = watchCountrySelect.value;
+            currentWatchCountry = selectedWatchCountryCode; // Store globally
+            let releaseDateGte = `${currentStartYear}-01-01`;
+            let releaseDateLte = `${currentEndYear}-12-31`;
+
+            // Store filters globally for pagination requests
+            currentFilters = {
+                genreId: selectedGenreId,
+                rating: minTmdbRating,
+                langCode: selectedLangCode,
+                originCountry: selectedCountryCode,
+                releaseGte: releaseDateGte,
+                releaseLte: releaseDateLte
+            };
+
+            // Reset state for new search
+            currentPage = 1;
+            totalPages = 1;
+            totalResults = 0;
+            currentMovieData = [];
+            sortKey = 'vote_average'; // Reset sort
+            sortAsc = false;
+
+            // Start API Fetch for Page 1
+            findButton.disabled = true;
+            prevButton.disabled = true; // Disable pagination during initial fetch
+            nextButton.disabled = true;
+            paginationControls.style.display = 'none'; // Hide pagination during fetch
+            findButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">...</svg> Finding movies...`;
+            resultsDiv.innerHTML = '<p class="text-center text-gray-500 p-4">Finding matching movies...</p>';
+
+            // Build URL for page 1
+            const discoverUrl = new URL(`${tmdbBaseUrl}/discover/movie`);
+            discoverUrl.searchParams.append('api_key', apiKey);
+            discoverUrl.searchParams.append('page', currentPage); // Start with page 1
+            discoverUrl.searchParams.append('include_adult', 'false');
+            discoverUrl.searchParams.append('include_video', 'false');
+            discoverUrl.searchParams.append('language', 'en-US');
+            discoverUrl.searchParams.append('sort_by', 'vote_average.desc');
+            discoverUrl.searchParams.append('vote_count.gte', 100);
+            // Add filters from current search
+            if (currentFilters.genreId) discoverUrl.searchParams.append('with_genres', currentFilters.genreId);
+            if (currentFilters.rating > 0) discoverUrl.searchParams.append('vote_average.gte', currentFilters.rating.toFixed(1));
+            if (currentFilters.releaseGte) discoverUrl.searchParams.append('primary_release_date.gte', currentFilters.releaseGte);
+            if (currentFilters.releaseLte) discoverUrl.searchParams.append('primary_release_date.lte', currentFilters.releaseLte);
+            if (currentFilters.langCode) discoverUrl.searchParams.append('with_original_language', currentFilters.langCode);
+            if (currentFilters.originCountry) discoverUrl.searchParams.append('with_origin_country', currentFilters.originCountry);
+
+            try {
+                // Stage 1: Discover Movies (Page 1)
+                const response = await fetch(discoverUrl);
+                if (!response.ok) { let errorMsg = `Error finding movies: ${response.status} ${response.statusText}`; try { const errorData = await response.json(); if (errorData.status_message) errorMsg = `TMDb Error: ${errorData.status_message}`; } catch (e) {} throw new Error(errorMsg); }
+                const data = await response.json();
+                let initialMovies = data.results;
+
+                // Store total pages/results from the first fetch
+                totalPages = data.total_pages;
+                totalResults = data.total_results;
+                currentPage = data.page; // Should be 1
+
+                if (initialMovies.length === 0) {
+                     displayResults([], selectedWatchCountryCode);
+                     updatePaginationControls(); // Show controls (but disabled) even if no results
+                     findButton.disabled = false; findButton.innerHTML = `<span class="lucide">&#xea7e;</span> Find Movies`;
+                     return;
+                 }
+
+                // Stage 2: Fetch Watch Providers
+                findButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">...</svg> Fetching providers...`;
+                resultsDiv.innerHTML = '<p class="text-center text-gray-500 p-4">Fetching watch provider information...</p>';
+                const moviesWithProviders = await fetchWatchProviders(initialMovies);
+
+                currentMovieData = moviesWithProviders; // Store globally
+                displayResults(currentMovieData, selectedWatchCountryCode); // Display page 1
+                updatePaginationControls(); // Show and update pagination controls
+
+            } catch (error) {
+                console.error("API Fetch Error:", error); showMessage(`Failed to process request. ${error.message}`, 'error');
+                resultsDiv.innerHTML = `<p class="text-center text-red-600 p-4">Error loading recommendations. Check console for details.</p>`;
+                paginationControls.style.display = 'none'; // Hide pagination on error
+            } finally {
+                 findButton.disabled = false; findButton.innerHTML = `<span class="lucide">&#xea7e;</span> Find Movies`;
+                 // Pagination button state is handled by updatePaginationControls
+            }
+        });
+
+        // --- Initial Setup & Event Listeners ---
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Slider
+            const currentFullYear = new Date().getFullYear();
+            if (yearSliderElement) {
+                noUiSlider.create(yearSliderElement, {
+                    range: { 'min': 1900, 'max': currentFullYear }, start: [currentStartYear, currentEndYear],
+                    connect: true, step: 1, margin: 1, format: { to: v => Math.round(v), from: v => Number(v) }
+                });
+                yearSliderElement.noUiSlider.on('update', function (values, handle) {
+                    const startVal = values[0]; const endVal = values[1];
+                    if (startYearDisplay) startYearDisplay.textContent = startVal;
+                    if (endYearDisplay) endYearDisplay.textContent = endVal;
+                    currentStartYear = startVal; currentEndYear = endVal;
+                });
+            } else { console.error("Year slider element not found."); }
+
+            // Add Pagination Button Listeners
+            if(prevButton) {
+                prevButton.addEventListener('click', () => {
+                    if (currentPage > 1) {
+                        fetchPage(currentPage - 1);
+                    }
+                });
+            }
+             if(nextButton) {
+                nextButton.addEventListener('click', () => {
+                    if (currentPage < totalPages) {
+                        fetchPage(currentPage + 1);
+                    }
+                });
+            }
+
+             // Set initial placeholder message
+             if(resultsDiv) {
+                resultsDiv.innerHTML = '<p class="text-center text-gray-500 p-4">Enter your preferences and API key, then click "Find Movies". Results will be shown here as a table.</p>';
+             }
+        });
+
+        // --- Populate Select functions (Definitions needed if not included above) ---
         function populateSelect(selectElement, map, defaultValue = null) {
             const sortedEntries = Object.entries(map).sort((a, b) => a[0].localeCompare(b[0]));
             sortedEntries.forEach(([name, value]) => {
@@ -184,18 +478,14 @@
                 selectElement.appendChild(option);
             });
         }
-        populateSelect(genreSelect, genreMap);
-        populateSelect(languageSelect, languageMap);
-        populateSelect(countrySelect, countryMap);
-        populateSelect(watchCountrySelect, watchRegionMap, 'US');
-
-        // --- Utility Functions ---
+        // --- showMessage function definition ---
         function showMessage(message, type = 'error', duration = 4000) {
              messageBox.textContent = message; messageBox.className = '';
              messageBox.classList.add('show', type);
              if (messageTimeout) clearTimeout(messageTimeout);
              messageTimeout = setTimeout(() => { messageBox.classList.remove('show'); }, duration);
         }
+        // --- fetchWatchProviders function definition ---
         async function fetchWatchProviders(movies) {
              const providerPromises = movies.map(movie => {
                  const providerUrl = `${tmdbBaseUrl}/movie/${movie.id}/watch/providers?api_key=${apiKey}`;
@@ -208,9 +498,8 @@
                  return movie;
              });
         }
-
-        // --- Sorting Function ---
-        function sortData(key) {
+        // --- sortData function definition ---
+         function sortData(key) {
             if (sortKey === key) { sortAsc = !sortAsc; } else { sortKey = key; sortAsc = true; }
             const sortedData = [...currentMovieData].sort((a, b) => {
                 let valA, valB;
@@ -235,8 +524,7 @@
             });
             displayResults(sortedData, currentWatchCountry);
         }
-
-        // --- Setup Header Clicks ---
+        // --- setupHeaderClicks function definition ---
         function setupHeaderClicks() {
             const headers = resultsDiv.querySelectorAll('.sortable-header');
             headers.forEach(header => {
@@ -249,8 +537,7 @@
                 });
             });
         }
-
-        // --- Display Results Function (Table Format) ---
+        // --- displayResults function definition ---
         function displayResults(movies, watchCountryCode) {
              resultsDiv.innerHTML = '';
              if (!movies || movies.length === 0) {
@@ -282,7 +569,8 @@
              const tbody = document.createElement('tbody');
              movies.forEach(movie => {
                  const row = document.createElement('tr');
-                 // Poster
+                 // Poster... Title... Year... Rating... Lang... Providers... (Cell creation logic as before)
+                  // Poster
                  const cellPoster = document.createElement('td'); cellPoster.classList.add('col-poster');
                  const posterImg = document.createElement('img'); posterImg.className = 'movie-poster-table';
                  posterImg.src = movie.poster_path ? `${imageBaseUrl}${movie.poster_path}` : 'https://placehold.co/40x60/e2e8f0/cbd5e0?text=N/A';
@@ -312,112 +600,14 @@
                  } else if (movie.watchProviders === null) { providerListDiv.innerHTML = `<span class="text-gray-400 text-xs italic">Fetch failed</span>`; }
                  else { providerListDiv.innerHTML = `<span class="text-gray-400 text-xs italic">None found</span>`; }
                  cellProviders.appendChild(providerListDiv); row.appendChild(cellProviders);
+
                  tbody.appendChild(row);
              });
              table.appendChild(tbody); resultsDiv.appendChild(table);
-             // Setup clicks AFTER table is in DOM
-             setupHeaderClicks();
+             setupHeaderClicks(); // Setup clicks AFTER table is in DOM
         }
 
-        // --- Form Submission Event Listener ---
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            if (apiKey === 'YOUR_TMDB_API_KEY_HERE' || !apiKey) { showMessage('Please enter your TMDb API key in the script section first.', 'error'); return; }
-
-            // Get Inputs
-            const selectedGenreId = genreSelect.value;
-            const minTmdbRating = parseFloat(tmdbRatingInput.value) || 0;
-            const selectedLangCode = languageSelect.value;
-            const selectedCountryCode = countrySelect.value;
-            const selectedWatchCountryCode = watchCountrySelect.value;
-            currentWatchCountry = selectedWatchCountryCode; // Store globally
-            let releaseDateGte = `${currentStartYear}-01-01`;
-            let releaseDateLte = `${currentEndYear}-12-31`;
-
-            // Start API Fetch
-            findButton.disabled = true;
-            findButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">...</svg> Finding movies...`;
-            resultsDiv.innerHTML = '<p class="text-center text-gray-500 p-4">Finding matching movies...</p>';
-
-            // Build URL
-            const discoverUrl = new URL(`${tmdbBaseUrl}/discover/movie`);
-            discoverUrl.searchParams.append('api_key', apiKey);
-            discoverUrl.searchParams.append('include_adult', 'false');
-            discoverUrl.searchParams.append('include_video', 'false');
-            discoverUrl.searchParams.append('language', 'en-US');
-            discoverUrl.searchParams.append('sort_by', 'vote_average.desc'); // API default sort
-            discoverUrl.searchParams.append('vote_count.gte', 100);
-            if (selectedGenreId) discoverUrl.searchParams.append('with_genres', selectedGenreId);
-            if (minTmdbRating > 0) discoverUrl.searchParams.append('vote_average.gte', minTmdbRating.toFixed(1));
-            discoverUrl.searchParams.append('primary_release_date.gte', releaseDateGte);
-            discoverUrl.searchParams.append('primary_release_date.lte', releaseDateLte);
-            if (selectedLangCode) discoverUrl.searchParams.append('with_original_language', selectedLangCode);
-            if (selectedCountryCode) discoverUrl.searchParams.append('with_origin_country', selectedCountryCode);
-
-            currentMovieData = []; // Reset data
-
-            try {
-                // Stage 1: Discover
-                const response = await fetch(discoverUrl);
-                if (!response.ok) { let errorMsg = `Error finding movies: ${response.status} ${response.statusText}`; try { const errorData = await response.json(); if (errorData.status_message) errorMsg = `TMDb Error: ${errorData.status_message}`; } catch (e) {} throw new Error(errorMsg); }
-                const data = await response.json();
-                let initialMovies = data.results;
-
-                if (initialMovies.length === 0) {
-                     displayResults([], selectedWatchCountryCode);
-                     findButton.disabled = false; findButton.innerHTML = `<span class="lucide">&#xea7e;</span> Find Movies`; return;
-                 }
-
-                // Stage 2: Fetch Providers
-                findButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">...</svg> Fetching providers...`;
-                resultsDiv.innerHTML = '<p class="text-center text-gray-500 p-4">Fetching watch provider information...</p>';
-                const moviesWithProviders = await fetchWatchProviders(initialMovies);
-
-                currentMovieData = moviesWithProviders; // Store globally
-                displayResults(currentMovieData, selectedWatchCountryCode); // Display initial API order
-
-            } catch (error) {
-                console.error("API Fetch Error:", error); showMessage(`Failed to process request. ${error.message}`, 'error');
-                resultsDiv.innerHTML = `<p class="text-center text-red-600 p-4">Error loading recommendations. Check console for details.</p>`;
-            } finally {
-                 findButton.disabled = false; findButton.innerHTML = `<span class="lucide">&#xea7e;</span> Find Movies`;
-            }
-        });
-
-        // --- Initial Setup ---
-        // Wrap slider initialization in DOMContentLoaded
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentFullYear = new Date().getFullYear();
-            // Check if the slider element exists before creating
-            if (yearSliderElement) {
-                noUiSlider.create(yearSliderElement, {
-                    range: { 'min': 1900, 'max': currentFullYear },
-                    start: [currentStartYear, currentEndYear], // Use default global values
-                    connect: true, step: 1, margin: 1,
-                    format: { to: value => Math.round(value), from: value => Number(value) }
-                });
-
-                // Attach the update listener
-                yearSliderElement.noUiSlider.on('update', function (values, handle) {
-                    const startVal = values[0]; const endVal = values[1];
-                    // Update display elements if they exist
-                    if (startYearDisplay) startYearDisplay.textContent = startVal;
-                    if (endYearDisplay) endYearDisplay.textContent = endVal;
-                    // Update global variables
-                    currentStartYear = startVal; currentEndYear = endVal;
-                });
-            } else {
-                console.error("Year slider element not found.");
-            }
-
-             // Set initial placeholder message
-             if(resultsDiv) {
-                resultsDiv.innerHTML = '<p class="text-center text-gray-500 p-4">Enter your preferences and API key, then click "Find Movies". Results will be shown here as a table.</p>';
-             }
-        });
-
     </script>
-  
 
 </body>
 </html>
