@@ -73,26 +73,13 @@
       .noUi-connect { background: #4f46e5; }
       #year-slider .noUi-handle {
            border: 1px solid #d1d5db; border-radius: 50%; background: #ffffff;
-           box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-           cursor: grab; width: 20px; height: 20px; right: -10px; top: -6px; /* Explicit size */
-       }
-        #year-slider .noUi-handle:focus { outline: none; }
-        #year-slider .noUi-handle:active { cursor: grabbing; }
-        #year-slider .noUi-handle::before, #year-slider .noUi-handle::after { display: none; }
-        
-        .slider-values {
-            display: flex; justify-content: space-between; /* Spreads items out */
-            margin-top: 8px; font-size: 0.75rem; /* text-xs */ color: #6b7280; /* gray-500 */
-            padding: 0 2px; /* Add slight padding so min/max aren't flush */
+…            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
-        .slider-values .selected-year { /* Class for selected years */
-             font-weight: 500; /* medium */
-             color: #374151; /* gray-700 */
-             /* Position these below handles? Harder without tooltips/pips */
-             /* Keeping them space-between for now */
+        .noUi-handle:focus .noUi-tooltip {
+             /* Optional: hide tooltip on focus/drag? */
+             /* display: none; */
         }
-
-
+          
       .pagination-controls {
             display: flex; justify-content: space-between; align-items: center;
             padding-top: 1rem; margin-top: 1rem; border-top: 1px solid #e5e7eb;
@@ -139,8 +126,6 @@
                   
                     <div class="slider-values">
                         <span id="min-year-display">1900</span> 
-                        <span id="start-year-display" class="selected-year">1990</span> 
-                        <span id="end-year-display" class="selected-year">2020</span>  
                         <span id="max-year-display">Year</span>
                     </div>
                 </div>
