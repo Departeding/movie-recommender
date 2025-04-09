@@ -70,10 +70,17 @@
        /* noUiSlider Customization */
        .noUi-target { border: 1px solid #d1d5db; box-shadow: none; background: #e5e7eb; border-radius: 9999px; height: 8px; }
        .noUi-connect { background: #4f46e5; }
-       .noUi-handle {
-           border: 1px solid #d1d5db; border-radius: 50%; background: #ffffff;
+        #year-slider .noUi-handle {
+           border: 1px solid #d1d5db;
+           border-radius: 50%;
+           background: #ffffff;
            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-           cursor: grab; width: 14px; height: 14px; right: -7px; top: -3px; /* Smaller handles */
+           cursor: grab;
+           /* --- New Dimensions & Positioning --- */
+           width: 20px;
+           height: 20px;
+           right: -10px; /* -(20px / 2) */
+           top: -6px;   /* -((20px - 8px) / 2) */
        }
         .noUi-handle:focus { outline: none; }
         .noUi-handle:active { cursor: grabbing; }
