@@ -118,10 +118,10 @@
 
     <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg w-full max-w-4xl">
         <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6 sm:mb-8 flex items-center justify-center gap-2">
-            <span class="lucide">&#xea5c;</span> Movie Recommender
+            <span class="lucide">&#xea5c;</span>Movie Recommender
         </h1>
 
-        /* Form structure remains the same */
+       
         <form id="recommendation-form" class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-6 mb-6 sm:mb-8">
             
             <div>
@@ -153,7 +153,7 @@
             
             <div class="md:col-span-3 flex justify-center mt-4">
                 <button type="submit" id="find-button" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span class="lucide">&#xea7e;</span> Find Movies
+                    <span class="lucide">&#xea7e;</span>Find Movies
                 </button>
             </div>
         </form>
@@ -164,7 +164,7 @@
             <div id="results" class="bg-gray-50 p-1 sm:p-2 rounded-lg border border-gray-200 min-h-[200px] max-h-[400px] overflow-y-auto overflow-x-auto">
                 <p class="text-center text-gray-500 p-4">Enter your preferences and API key, then click "Find Movies". Results will be shown here as a table.</p>
             </div>
-             {/* NEW: Pagination Controls Container */}
+            
              <div id="pagination-controls" class="pagination-controls" style="display: none;"> {/* Hidden initially */}
                 <button id="prev-button" disabled>&lt; Previous</button>
                 <span id="page-info">Page 1 of 1</span>
