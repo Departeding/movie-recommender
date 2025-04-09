@@ -69,11 +69,41 @@
           background-color: rgba(255, 255, 255, 0.2); border-radius: 0.25rem;
       }
 
-      .noUi-target { border: 1px solid #d1d5db; box-shadow: none; background: #e5e7eb; border-radius: 9999px; height: 8px; }
+       .noUi-target { border: 1px solid #d1d5db; box-shadow: none; background: #e5e7eb; border-radius: 9999px; height: 8px; }
       .noUi-connect { background: #4f46e5; }
       #year-slider .noUi-handle {
            border: 1px solid #d1d5db; border-radius: 50%; background: #ffffff;
-…            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+           box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+           cursor: grab; width: 20px; height: 20px; right: -10px; top: -6px;
+       }
+        #year-slider .noUi-handle:focus { outline: none; }
+        #year-slider .noUi-handle:active { cursor: grabbing; }
+        #year-slider .noUi-handle::before, #year-slider .noUi-handle::after { display: none; }
+
+        /* Updated Slider Values Display (Only Min/Max) */
+        .slider-values {
+            display: flex; justify-content: space-between;
+            margin-top: 4px; /* Reduced margin */ font-size: 0.75rem; color: #6b7280;
+            padding: 0 2px;
+        }
+        /* Removed .selected-year class */
+
+        /* NEW: Styling for noUiSlider Tooltips */
+        .noUi-tooltip {
+            display: block;
+            position: absolute;
+            background: #374151; /* Dark Gray */
+            color: white;
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 500; /* medium */
+            padding: 2px 6px;
+            border-radius: 0.25rem; /* rounded-sm */
+            white-space: nowrap;
+            transform: translate(-50%, calc(100% + 5px)); /* Position below handle */
+            bottom: -8px; /* Adjust vertical position relative to handle bottom */
+            left: 50%;
+            border: none;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
         .noUi-handle:focus .noUi-tooltip {
              /* Optional: hide tooltip on focus/drag? */
