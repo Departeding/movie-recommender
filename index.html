@@ -124,7 +124,7 @@
                 </div>
                 <div class="pt-2">
                     <button type="submit" id="find-button" class="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span class="lucide"></span>Find Movies
+                        <span class="lucide"></span> Find Movies
                     </button>
                 </div>
             </form>
@@ -136,7 +136,7 @@
                  <div>
                      <label for="sort-options" class="sr-only">Sort by</label>
                      <select id="sort-options" name="sort-options" class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white text-gray-900">
-                         <option value="popularity_desc">Popularity</option> {/* Changed default sort */}
+                         <option value="popularity_desc">Popularity</option>
                          <option value="rating_desc">Rating (High-Low)</option>
                          <option value="rating_asc">Rating (Low-High)</option>
                          <option value="year_desc">Year (New-Old)</option>
@@ -149,7 +149,6 @@
 
              <div id="results-container" class="min-h-[400px] max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
                  <div id="results" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    
                      <p id="results-placeholder" class="text-center text-gray-400 p-4 col-span-full">Loading initial movies...</p>
                  </div>
              </div>
@@ -201,7 +200,7 @@
         let currentEndYear = 2020;
         let currentMovieData = [];
         let currentWatchCountry = 'US';
-        let currentSort = 'popularity_desc'; // Default sort matches new dropdown option
+        let currentSort = 'popularity_desc';
         let currentPage = 1;
         let totalPages = 1;
         let totalResults = 0;
@@ -236,13 +235,11 @@
              });
         }
 
-        // Sorts the *currently stored* movie data and re-renders
         function sortData(sortValue) {
-            currentSort = sortValue; // Update global sort state
+            currentSort = sortValue;
             const [key, direction] = sortValue.split('_');
             const sortAsc = direction === 'asc';
 
-            // Sort the existing currentMovieData array
             const sortedData = [...currentMovieData].sort((a, b) => {
                 let valA, valB;
                 switch (key) {
@@ -254,22 +251,21 @@
                         valB = b.release_date ? parseInt(b.release_date.substring(0, 4), 10) : 0;
                         valA = isNaN(valA) ? 0 : valA; valB = isNaN(valB) ? 0 : valB;
                         return sortAsc ? valA - valB : valB - valA;
-                    case 'rating': // Corresponds to vote_average
+                    case 'rating':
                         valA = typeof a.vote_average === 'number' ? a.vote_average : -1;
                         valB = typeof b.vote_average === 'number' ? b.vote_average : -1;
                         return sortAsc ? valA - valB : valB - valA;
-                    case 'popularity': // Added for new default sort option
+                    case 'popularity':
                          valA = typeof a.popularity === 'number' ? a.popularity : -1;
                          valB = typeof b.popularity === 'number' ? b.popularity : -1;
                          return sortAsc ? valA - valB : valB - valA;
                     default: return 0;
                 }
             });
-            // Re-render the grid with the sorted data
             displayResults(sortedData, currentWatchCountry);
         }
 
-        // --- Display Results Function (GRID Format) ---
+        // --- Display Results Function (GRID Format) --- UPDATED ---
         function displayResults(movies, watchCountryCode) {
              resultsDiv.innerHTML = '';
              if (resultsPlaceholder) resultsPlaceholder.style.display = 'none';
@@ -286,16 +282,19 @@
                  posterImg.className = 'movie-poster-grid';
                  posterImg.src = movie.poster_path ? `${imageBaseUrl}${movie.poster_path}` : 'https://placehold.co/342x513/e5e7eb/4b5563?text=N/A';
                  posterImg.alt = `Poster for ${movie.title || 'movie'}`;
-                 posterImg.loading = 'lazy'; // Add lazy loading for posters
+                 posterImg.loading = 'lazy';
                  posterImg.onerror = function() { this.onerror=null; this.src='https://placehold.co/342x513/e5e7eb/4b5563?text=Error'; };
                  gridItem.appendChild(posterImg);
                  const infoDiv = document.createElement('div');
                  infoDiv.className = 'movie-info';
                  const rating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
+                 const voteCount = movie.vote_count !== undefined ? movie.vote_count : 0; // Get vote count
                  const year = movie.release_date ? movie.release_date.substring(0, 4) : 'N/A';
                  const lang = movie.original_language ? movie.original_language.toUpperCase() : 'N/A';
+
+                 // UPDATED: Include vote count in the rating string
                  infoDiv.innerHTML = `
-                     <p><strong>Rating:</strong> ${rating}/10</p>
+                     <p><strong>Rating:</strong> ${rating}/10 (${voteCount.toLocaleString()} votes)</p>
                      <p><strong>Year:</strong> ${year} | <strong>Lang:</strong> ${lang}</p>
                  `;
                  gridItem.appendChild(infoDiv);
@@ -333,16 +332,13 @@
         }
 
         // --- Refactored: Perform Search and Display ---
-        // Fetches movies based on current filters, sorts, and displays.
-        // isNewSearch flag determines if filters are read anew and page reset to 1.
         async function performSearchAndDisplay(page = 1, isNewSearch = false) {
             findButton.disabled = true;
             if(prevButton) prevButton.disabled = true;
             if(nextButton) nextButton.disabled = true;
-            paginationControls.style.display = 'none'; // Hide pagination during fetch
+            paginationControls.style.display = 'none';
 
             if (isNewSearch) {
-                // Read filters from form and store globally
                 currentFilters = {
                     genreId: genreSelect.value,
                     rating: parseFloat(tmdbRatingInput.value) || 0,
@@ -351,13 +347,10 @@
                     releaseGte: `${currentStartYear}-01-01`,
                     releaseLte: `${currentEndYear}-12-31`
                 };
-                currentPage = 1; // Reset to page 1 for new search
-                totalPages = 1;
-                totalResults = 0;
-                currentMovieData = [];
-                currentWatchCountry = watchCountrySelect.value; // Update watch country
-                currentSort = sortOptionsSelect.value; // Use current dropdown value for initial sort
-                findButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">...</svg>Find movies;
+                currentPage = 1; totalPages = 1; totalResults = 0; currentMovieData = [];
+                currentWatchCountry = watchCountrySelect.value;
+                currentSort = sortOptionsSelect.value;
+                findButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">...</svg> Finding movies...`;
                 resultsDiv.innerHTML = '';
                 if (resultsPlaceholder) resultsPlaceholder.style.display = 'block';
                 resultsPlaceholder.textContent = 'Finding matching movies...';
@@ -365,19 +358,17 @@
                  resultsDiv.innerHTML = '';
                  if (resultsPlaceholder) resultsPlaceholder.style.display = 'block';
                  resultsPlaceholder.textContent = `Loading page ${page}...`;
-                 currentPage = page; // Update current page for pagination fetch
+                 currentPage = page;
             }
 
-            // Build URL - Use popularity sort for API fetch, apply user sort later
             const discoverUrl = new URL(`${tmdbBaseUrl}/discover/movie`);
             discoverUrl.searchParams.append('api_key', apiKey);
             discoverUrl.searchParams.append('page', currentPage);
             discoverUrl.searchParams.append('include_adult', 'false');
             discoverUrl.searchParams.append('include_video', 'false');
             discoverUrl.searchParams.append('language', 'en-US');
-            discoverUrl.searchParams.append('sort_by', 'popularity.desc'); // Fetch by popularity
+            discoverUrl.searchParams.append('sort_by', 'popularity.desc');
             discoverUrl.searchParams.append('vote_count.gte', 100);
-            // Add filters
             if (currentFilters.genreId) discoverUrl.searchParams.append('with_genres', currentFilters.genreId);
             if (currentFilters.rating > 0) discoverUrl.searchParams.append('vote_average.gte', currentFilters.rating.toFixed(1));
             if (currentFilters.releaseGte) discoverUrl.searchParams.append('primary_release_date.gte', currentFilters.releaseGte);
@@ -386,38 +377,25 @@
             if (currentFilters.originCountry) discoverUrl.searchParams.append('with_origin_country', currentFilters.originCountry);
 
             try {
-                // Stage 1: Discover Movies
                 const response = await fetch(discoverUrl);
                 if (!response.ok) { let errorMsg = `Error fetching data: ${response.status} ${response.statusText}`; try { const errorData = await response.json(); if (errorData.status_message) errorMsg = `TMDb Error: ${errorData.status_message}`; } catch (e) {} throw new Error(errorMsg); }
                 const data = await response.json();
                 let fetchedMovies = data.results;
 
-                // Update pagination state from response
-                totalPages = data.total_pages;
-                totalResults = data.total_results;
-                // currentPage = data.page; // Already set before fetch
+                totalPages = data.total_pages; totalResults = data.total_results;
 
                 if (fetchedMovies.length === 0) {
-                     if (isNewSearch) {
-                         displayResults([], currentWatchCountry); // Show "No movies found"
-                     } else {
-                         showMessage(`No results found on page ${currentPage}.`, 'info');
-                         displayResults([], currentWatchCountry); // Show empty grid
-                     }
-                     updatePaginationControls();
-                     return; // Stop processing
+                     if (isNewSearch) { displayResults([], currentWatchCountry); }
+                     else { showMessage(`No results found on page ${currentPage}.`, 'info'); displayResults([], currentWatchCountry); }
+                     updatePaginationControls(); return;
                  }
 
-                // Stage 2: Fetch Watch Providers
                 if (resultsPlaceholder) resultsPlaceholder.textContent = 'Fetching watch provider information...';
                 const moviesWithProviders = await fetchWatchProviders(fetchedMovies);
 
-                currentMovieData = moviesWithProviders; // Store fetched data
-
-                // Sort the newly fetched data based on the current dropdown selection
-                sortData(currentSort); // This calls displayResults internally
-
-                updatePaginationControls(); // Update pagination display
+                currentMovieData = moviesWithProviders;
+                sortData(currentSort); // Sorts and displays
+                updatePaginationControls();
 
             } catch (error) {
                 console.error("API Fetch Error:", error);
@@ -427,24 +405,19 @@
                 paginationControls.style.display = 'none';
             } finally {
                  findButton.disabled = false;
-                 // Pagination buttons enabled/disabled by updatePaginationControls
-                 if (!isNewSearch) { // Only restore Find Movies text if it wasn't a new search causing this
-                      findButton.innerHTML = `<span class="lucide">&#xea7e;</span> Find Movies`;
+                 if (isNewSearch) { // Only restore button text if it was a new search
+                    findButton.innerHTML = `<span class="lucide">&#xea7e;</span> Find Movies`;
                  }
             }
         }
 
-
         // --- Event Listeners ---
-        // Form submission triggers a new search from page 1
         form.addEventListener('submit', (event) => {
             event.preventDefault();
-            performSearchAndDisplay(1, true); // Pass true for isNewSearch
+            performSearchAndDisplay(1, true);
         });
 
-        // DOMContentLoaded for initial setup and load
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Slider
             const currentFullYear = new Date().getFullYear();
             if (yearSliderElement) {
                 noUiSlider.create(yearSliderElement, {
@@ -459,25 +432,21 @@
                 });
             } else { console.error("Year slider element not found."); }
 
-            // Pagination Button Listeners - call refactored function
             if(prevButton) { prevButton.addEventListener('click', () => { if (currentPage > 1) { performSearchAndDisplay(currentPage - 1, false); } }); }
             if(nextButton) { nextButton.addEventListener('click', () => { if (currentPage < totalPages) { performSearchAndDisplay(currentPage + 1, false); } }); }
 
-            // Sort Dropdown Listener - calls sortData directly
             if(sortOptionsSelect) {
                 sortOptionsSelect.addEventListener('change', (event) => {
                     if (currentMovieData.length > 0) { sortData(event.target.value); }
                 });
             }
 
-             // Populate selects on load
              populateSelect(genreSelect, genreMap);
              populateSelect(languageSelect, languageMap);
              populateSelect(countrySelect, countryMap);
              populateSelect(watchCountrySelect, watchRegionMap, 'US');
 
-             // Perform initial search on load
-             performSearchAndDisplay(1, true); // Treat initial load as a new search
+             performSearchAndDisplay(1, true); // Initial load
         });
 
     </script>
