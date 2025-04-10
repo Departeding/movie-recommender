@@ -448,7 +448,7 @@
                  resultsPlaceholder.textContent = `Loading page ${page}...`;
                  currentPage = page;
             }
-
+            console.log('Performing search with filters:', currentFilters, 'Page:', currentPage);
             const discoverUrl = new URL(`${tmdbBaseUrl}/discover/movie`);
             discoverUrl.searchParams.append('api_key', apiKey);
             discoverUrl.searchParams.append('page', currentPage);
