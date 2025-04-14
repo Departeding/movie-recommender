@@ -97,7 +97,6 @@
       .pagination-controls button:disabled { opacity: 0.5; cursor: not-allowed; }
       #page-info { font-size: 0.875rem; color: #4b5563; }
 
-      /* Movie Details Page Styles */
       .details-backdrop { height: 300px; background-size: cover; background-position: center center; position: relative; }
       .details-backdrop::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to top, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 50%); }
       .details-poster { width: 150px; height: auto; aspect-ratio: 2 / 3; border-radius: 0.375rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); margin-top: -75px; position: relative; z-index: 1; }
@@ -226,6 +225,7 @@
         const movieDetailsPage = document.getElementById('movie-details-page');
         let messageTimeout;
 
+        // Global state (initialized with defaults)
         let currentStartYear = 1990;
         let currentEndYear = 2020;
         let currentMovieData = [];
@@ -234,7 +234,7 @@
         let currentPage = 1;
         let totalPages = 1;
         let totalResults = 0;
-        let currentFilters = {};
+        let currentFilters = {}; // Stores the filters used for the current results set
         const sliderMinYear = 1900;
         const sliderMaxYear = new Date().getFullYear();
 
@@ -268,7 +268,7 @@
         }
 
         function sortData(sortValue) {
-            currentSort = sortValue;
+            currentSort = sortValue; // Update global sort state
             const [key, direction] = sortValue.split('_');
             const sortAsc = direction === 'asc';
             const sortedData = [...currentMovieData].sort((a, b) => {
@@ -293,12 +293,17 @@
                     default: return 0;
                 }
             });
-            displayResults(sortedData, currentWatchCountry);
+            // Store the newly sorted data back into the global state
+            // This ensures pagination uses the sorted data if we implement client-side pagination later
+            // For now, it just ensures displayResults gets the correctly sorted data for the current page
+            currentMovieData = sortedData;
+            displayResults(currentMovieData, currentWatchCountry); // Re-render the grid
         }
 
         function displayResults(movies, watchCountryCode) {
              resultsDiv.innerHTML = '';
-             if (resultsPlaceholder) resultsPlaceholder.style.display = 'none';
+             const placeholder = document.getElementById('results-placeholder');
+             if (placeholder) placeholder.style.display = 'none';
 
              if (!movies || movies.length === 0) {
                  resultsDiv.innerHTML = '<p class="text-center text-gray-500 p-4 col-span-full">No movies found matching your criteria.</p>';
@@ -427,59 +432,34 @@
             movieDetailsPage.innerHTML = '';
             resultsView.classList.remove('hidden');
         }
-        async function performSearchAndDisplay(page = 1, isNewSearch = false) {
+
+        // --- Refactored: Perform Search and Display ---
+        async function performSearchAndDisplay(page = 1) { // Removed isNewSearch flag
             hideMovieDetails();
             findButton.disabled = true;
             if(prevButton) prevButton.disabled = true;
             if(nextButton) nextButton.disabled = true;
             paginationControls.style.display = 'none';
 
-            if (isNewSearch) {
-                try { // Added try block here
-                    console.log('Reading genreSelect.value:', genreSelect.value);
-                    const genreId = genreSelect.value;
-                    console.log('Reading tmdbRatingInput.value:', tmdbRatingInput.value);
-                    const rating = parseFloat(tmdbRatingInput.value) || 0;
-                    console.log('Reading languageSelect.value:', languageSelect.value);
-                    const langCode = languageSelect.value;
-                    console.log('Reading countrySelect.value:', countrySelect.value);
-                    const originCountry = countrySelect.value;
-                    console.log('Reading currentStartYear:', currentStartYear);
-                    const releaseGte = `${currentStartYear}-01-01`;
-                    console.log('Reading currentEndYear:', currentEndYear);
-                    const releaseLte = `${currentEndYear}-12-31`;
+            // Filters are now assumed to be up-to-date in currentFilters
+            // which is updated by submit handler or DOMContentLoaded
+            currentPage = page; // Set current page for this fetch
 
-                    currentFilters = { genreId, rating, langCode, originCountry, releaseGte, releaseLte };
-                    console.log('Filters Object Updated:', currentFilters);
+            // Set loading message based on page number
+            resultsDiv.innerHTML = '';
+            if (resultsPlaceholder) resultsPlaceholder.style.display = 'block';
+            resultsPlaceholder.textContent = `Loading page ${currentPage}...`;
 
-                    currentPage = 1; totalPages = 1; totalResults = 0; currentMovieData = [];
-                    currentWatchCountry = watchCountrySelect.value; currentSort = sortOptionsSelect.value;
-                    findButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">...</svg> Finding movies...`;
-                    resultsDiv.innerHTML = '';
-                    if (resultsPlaceholder) resultsPlaceholder.style.display = 'block';
-                    resultsPlaceholder.textContent = 'Finding matching movies...';
-                } catch (e) {
-                   console.error("Error reading filters:", e);
-                   showMessage("Error reading filter values. Check console.", "error");
-                   findButton.disabled = false;
-                   findButton.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/search.svg" alt="Search" class="w-5 h-5 inline-block -ml-1" style="filter: invert(1);"/> Find Movies`;
-                   return;
-               }
-            } else {
-                 resultsDiv.innerHTML = '';
-                 if (resultsPlaceholder) resultsPlaceholder.style.display = 'block';
-                 resultsPlaceholder.textContent = `Loading page ${page}...`;
-                 currentPage = page;
-            }
 
             const discoverUrl = new URL(`${tmdbBaseUrl}/discover/movie`);
             discoverUrl.searchParams.append('api_key', apiKey);
-            discoverUrl.searchParams.append('page', currentPage);
+            discoverUrl.searchParams.append('page', currentPage); // Use current page
             discoverUrl.searchParams.append('include_adult', 'false');
             discoverUrl.searchParams.append('include_video', 'false');
             discoverUrl.searchParams.append('language', 'en-US');
-            discoverUrl.searchParams.append('sort_by', 'popularity.desc');
+            discoverUrl.searchParams.append('sort_by', 'popularity.desc'); // Use consistent API sort
             discoverUrl.searchParams.append('vote_count.gte', 100);
+            // Use globally stored currentFilters
             if (currentFilters.genreId) discoverUrl.searchParams.append('with_genres', currentFilters.genreId);
             if (currentFilters.rating > 0) discoverUrl.searchParams.append('vote_average.gte', currentFilters.rating.toFixed(1));
             if (currentFilters.releaseGte) discoverUrl.searchParams.append('primary_release_date.gte', currentFilters.releaseGte);
@@ -487,7 +467,7 @@
             if (currentFilters.langCode) discoverUrl.searchParams.append('with_original_language', currentFilters.langCode);
             if (currentFilters.originCountry) discoverUrl.searchParams.append('with_origin_country', currentFilters.originCountry);
 
-             console.log('Fetching URL:', discoverUrl.toString());
+             console.log('Fetching URL:', discoverUrl.toString()); // DEBUG
 
             try {
                 const response = await fetch(discoverUrl);
@@ -495,19 +475,21 @@
                 const data = await response.json();
                 let fetchedMovies = data.results;
 
-                totalPages = data.total_pages; totalResults = data.total_results;
+                totalPages = data.total_pages;
+                totalResults = data.total_results;
 
                 if (fetchedMovies.length === 0) {
-                     if (isNewSearch) { displayResults([], currentWatchCountry); }
-                     else { showMessage(`No results found on page ${currentPage}.`, 'info'); displayResults([], currentWatchCountry); }
+                    // Show "No movies found" only if it's page 1, otherwise it might just be the end of results
+                     if (currentPage === 1) { displayResults([], currentWatchCountry); }
+                     else { showMessage(`No results found on page ${currentPage}.`, 'info'); displayResults([], currentWatchCountry); } // Keep showing empty grid
                      updatePaginationControls(); return;
                  }
 
                 if (resultsPlaceholder) resultsPlaceholder.textContent = 'Fetching watch provider information...';
                 const moviesWithProviders = await fetchWatchProviders(fetchedMovies);
 
-                currentMovieData = moviesWithProviders;
-                sortData(currentSort);
+                currentMovieData = moviesWithProviders; // Store data for current page
+                sortData(currentSort); // Sort and display the fetched page data
                 updatePaginationControls();
 
             } catch (error) {
@@ -518,12 +500,44 @@
                 paginationControls.style.display = 'none';
             } finally {
                  findButton.disabled = false;
-                 if (isNewSearch || !document.querySelector('#find-button img')) {
-                    findButton.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/search.svg" alt="Search" class="w-5 h-5 inline-block -ml-1" style="filter: invert(1);"/> Find Movies`;
-                 }
-                 updatePaginationControls();
+                 findButton.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/search.svg" alt="Search" class="w-5 h-5 inline-block -ml-1" style="filter: invert(1);"/> Find Movies`;
+                 updatePaginationControls(); // Update button states based on final currentPage/totalPages
             }
         }
+
+        // --- Event Listeners ---
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            console.log('--- Form Submit ---'); // DEBUG
+
+            // Read ALL filters and update global state HERE
+            try {
+                const sliderValues = yearSliderElement.noUiSlider.get(true);
+                const startYear = parseInt(sliderValues[0], 10);
+                const endYear = parseInt(sliderValues[1], 10);
+
+                currentFilters = {
+                    genreId: genreSelect.value,
+                    rating: parseFloat(tmdbRatingInput.value) || 0,
+                    langCode: languageSelect.value,
+                    originCountry: countrySelect.value,
+                    releaseGte: `${startYear}-01-01`,
+                    releaseLte: `${endYear}-12-31`
+                };
+                currentWatchCountry = watchCountrySelect.value;
+                currentSort = sortOptionsSelect.value; // Use current sort selection
+
+                console.log('Filters Object Updated (in submit):', currentFilters); // DEBUG
+                console.log('Watch Country (in submit):', currentWatchCountry); // DEBUG
+                console.log('Sort Option (in submit):', currentSort); // DEBUG
+
+                performSearchAndDisplay(1); // Trigger search for page 1 with updated filters
+
+            } catch (e) {
+                 console.error("Error reading filters on submit:", e);
+                 showMessage("Error reading filter values. Check console.", "error");
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', function() {
             if (yearSliderElement) {
@@ -534,7 +548,7 @@
                 });
                 yearSliderElement.noUiSlider.on('update', function (values, handle) {
                     const startVal = parseInt(values[0]); const endVal = parseInt(values[1]);
-                    currentStartYear = startVal; currentEndYear = endVal;
+                    currentStartYear = startVal; currentEndYear = endVal; // Keep updating globals for reference if needed elsewhere
                 });
                 const minDisplay = document.getElementById('min-year-display');
                 const maxDisplay = document.getElementById('max-year-display');
@@ -543,9 +557,11 @@
 
             } else { console.error("Year slider element not found."); }
 
-            if(prevButton) { prevButton.addEventListener('click', () => { if (currentPage > 1) { performSearchAndDisplay(currentPage - 1, false); } }); }
-            if(nextButton) { nextButton.addEventListener('click', () => { if (currentPage < totalPages) { performSearchAndDisplay(currentPage + 1, false); } }); }
+            // Pagination listeners now just call performSearchAndDisplay with page number
+            if(prevButton) { prevButton.addEventListener('click', () => { if (currentPage > 1) { performSearchAndDisplay(currentPage - 1); } }); }
+            if(nextButton) { nextButton.addEventListener('click', () => { if (currentPage < totalPages) { performSearchAndDisplay(currentPage + 1); } }); }
 
+            // Sort listener just calls sortData (which re-renders current page)
             if(sortOptionsSelect) {
                 sortOptionsSelect.addEventListener('change', (event) => {
                     if (currentMovieData.length > 0) { sortData(event.target.value); }
@@ -557,7 +573,29 @@
              populateSelect(countrySelect, countryMap);
              populateSelect(watchCountrySelect, watchRegionMap, 'US');
 
-             performSearchAndDisplay(1, true); // Initial load
+             // Set initial filters based on default form state
+             try {
+                 const initialSliderValues = yearSliderElement.noUiSlider.get(true);
+                 currentStartYear = parseInt(initialSliderValues[0], 10);
+                 currentEndYear = parseInt(initialSliderValues[1], 10);
+                 currentFilters = {
+                    genreId: genreSelect.value,
+                    rating: parseFloat(tmdbRatingInput.value) || 0,
+                    langCode: languageSelect.value,
+                    originCountry: countrySelect.value,
+                    releaseGte: `${currentStartYear}-01-01`,
+                    releaseLte: `${currentEndYear}-12-31`
+                 };
+                 currentWatchCountry = watchCountrySelect.value;
+                 currentSort = sortOptionsSelect.value;
+                 console.log("Initial Filters Set:", currentFilters); // DEBUG
+             } catch(e) {
+                 console.error("Error setting initial filters:", e);
+                 // Set default filters if reading fails
+                 currentFilters = { genreId: '', rating: 0, langCode: '', originCountry: '', releaseGte: '1990-01-01', releaseLte: '2020-12-31' };
+             }
+
+             performSearchAndDisplay(1); // Initial load using default filters read above
         });
 
     </script>
